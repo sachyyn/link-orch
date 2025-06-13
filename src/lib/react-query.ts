@@ -70,6 +70,18 @@ export const queryKeys = {
     profile: () => ['user', 'profile'] as const,
     onboardingStatus: () => ['user', 'onboarding-status'] as const,
   },
+  
+  // AI Creator
+  aiCreator: {
+    all: () => ['ai-creator'] as const,
+    projects: () => ['ai-creator', 'projects'] as const,
+    project: (id: string | number) => ['ai-creator', 'projects', id] as const,
+    sessions: (projectId: string | number) => ['ai-creator', 'sessions', projectId] as const,
+    session: (id: string | number) => ['ai-creator', 'sessions', id] as const,
+    versions: (sessionId: string | number) => ['ai-creator', 'versions', sessionId] as const,
+    assets: (sessionId: string | number) => ['ai-creator', 'assets', sessionId] as const,
+    usage: (userId?: string) => ['ai-creator', 'usage', userId] as const,
+  },
 } as const
 
 // Error handling utilities

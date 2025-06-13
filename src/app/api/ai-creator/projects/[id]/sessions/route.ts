@@ -1,17 +1,7 @@
 import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
 import { getProjectSessions, createSession } from '@/db/services/ai-creator-service'
 import { type AIPostSession, type CreateSessionInput } from '@/db/schema'
-import { z } from 'zod'
-
-// Validation schema for creating sessions
-const createSessionSchema = z.object({
-  postIdea: z.string().min(1),
-  additionalContext: z.string().optional(),
-  targetContentType: z.enum(['text-post', 'carousel', 'video-script', 'poll', 'article', 'story', 'announcement']).default('text-post'),
-  selectedModel: z.string().min(1),
-  customPrompt: z.string().optional(),
-  needsAsset: z.boolean().default(false),
-})
+import { createSessionApiSchema, type CreateSessionApiInput } from '@/lib/schemas'
 
 // Types for API responses
 interface SessionResponse extends Omit<AIPostSession, 'createdAt' | 'updatedAt'> {
@@ -71,9 +61,9 @@ export const GET = createGetHandler<never, SessionListResponse>(
  * POST /api/ai-creator/projects/[id]/sessions
  * 
  * Creates a new post session for a specific project
- * Body schema: createSessionSchema
+ * Body schema: createSessionApiSchema
  */
-export const POST = createPostHandler<Omit<CreateSessionInput, 'projectId'>, SessionResponse>(
+export const POST = createPostHandler<CreateSessionApiInput, SessionResponse>(
   async ({ userId, params, body }) => {
     if (!userId) {
       throw new Error('User ID is required')
@@ -116,7 +106,7 @@ export const POST = createPostHandler<Omit<CreateSessionInput, 'projectId'>, Ses
     }
   },
   {
-    bodySchema: createSessionSchema,
+    bodySchema: createSessionApiSchema,
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',

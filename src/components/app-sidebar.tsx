@@ -8,6 +8,7 @@ import {
   Settings,
   Plus,
   MessageSquare,
+  Bot,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -36,6 +37,11 @@ const items = [
     title: "Content",
     url: "/dashboard/content",
     icon: FileText,
+  },
+  {
+    title: "AI Creator",
+    url: "/dashboard/ai-creator",
+    icon: Bot,
   },
   {
     title: "Calendar",

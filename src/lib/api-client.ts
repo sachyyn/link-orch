@@ -96,6 +96,38 @@ export const apiClient = {
     getStats: () => apiClient.get('/dashboard/stats'),
   },
 
+  // AI Creator APIs
+  aiCreator: {
+    // Projects
+    getProjects: (params?: any) => apiClient.get('/ai-creator/projects', params),
+    getProject: (id: string | number) => apiClient.get(`/ai-creator/projects/${id}`),
+    createProject: (data: any) => apiClient.post('/ai-creator/projects', data),
+    updateProject: (id: string | number, data: any) => apiClient.put(`/ai-creator/projects/${id}`, data),
+    deleteProject: (id: string | number) => apiClient.delete(`/ai-creator/projects/${id}`),
+    
+    // Sessions
+    getSessions: (projectId: string | number) => apiClient.get(`/ai-creator/projects/${projectId}/sessions`),
+    getSession: (id: string | number) => apiClient.get(`/ai-creator/sessions/${id}`),
+    createSession: (projectId: string | number, data: any) => apiClient.post(`/ai-creator/projects/${projectId}/sessions`, data),
+    updateSession: (id: string | number, data: any) => apiClient.put(`/ai-creator/sessions/${id}`, data),
+    deleteSession: (id: string | number) => apiClient.delete(`/ai-creator/sessions/${id}`),
+    
+    // Content Generation
+    generateContent: (data: any) => apiClient.post('/ai-creator/generate/content', data),
+    generateAssets: (data: any) => apiClient.post('/ai-creator/generate/assets', data),
+    
+    // Versions & Assets
+    getVersions: (sessionId: string | number) => apiClient.get(`/ai-creator/sessions/${sessionId}/versions`),
+    selectVersion: (versionId: string | number) => apiClient.post(`/ai-creator/versions/${versionId}/select`),
+    getAssets: (sessionId: string | number) => apiClient.get(`/ai-creator/sessions/${sessionId}/assets`),
+    
+    // Usage
+    getUsage: (params?: any) => apiClient.get('/ai-creator/usage', params),
+    
+    // Test
+    testGeneration: () => apiClient.post('/ai-creator/test-generation'),
+  },
+
   // Content Management APIs
   content: {
     // Posts

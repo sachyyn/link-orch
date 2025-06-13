@@ -2,6 +2,7 @@ import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
 import { getProjects, createProject, type ProjectFilters, type ProjectListResult } from '@/db/services/ai-creator-service'
 import { type AIProject, type CreateProjectInput } from '@/db/schema'
 import { z } from 'zod'
+import { createProjectApiSchema, type CreateProjectApiInput } from '@/lib/schemas'
 
 // Validation schemas
 const projectFilterSchema = z.object({
@@ -12,19 +13,6 @@ const projectFilterSchema = z.object({
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-})
-
-const createProjectSchema = z.object({
-  name: z.string().min(1).max(255),
-  description: z.string().optional(),
-  tone: z.enum(['professional', 'casual', 'thought-leader', 'provocative', 'educational', 'inspirational', 'conversational', 'custom']).default('professional'),
-  contentTypes: z.string().min(1), // JSON array as string
-  guidelines: z.string().min(1),
-  targetAudience: z.string().optional(),
-  keyTopics: z.string().optional(),
-  brandVoice: z.string().optional(),
-  contentPillars: z.string().optional(),
-  defaultModel: z.string().default('gemini-2.0-flash-exp'),
 })
 
 // Types for API responses
@@ -88,9 +76,9 @@ export const GET = createGetHandler<ProjectFilters, ProjectListResponse>(
  * POST /api/ai-creator/projects
  * 
  * Creates a new AI Creator project
- * Body schema: createProjectSchema
+ * Body schema: createProjectApiSchema
  */
-export const POST = createPostHandler<CreateProjectInput, ProjectResponse>(
+export const POST = createPostHandler<CreateProjectApiInput, ProjectResponse>(
   async ({ userId, body }) => {
     if (!userId) {
       throw new Error('User ID is required')
@@ -141,7 +129,7 @@ export const POST = createPostHandler<CreateProjectInput, ProjectResponse>(
     }
   },
   {
-    bodySchema: createProjectSchema,
+    bodySchema: createProjectApiSchema,
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',

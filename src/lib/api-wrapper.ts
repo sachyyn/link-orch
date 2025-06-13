@@ -56,6 +56,10 @@ export function createAPIHandler<
     withErrorHandler(async (request: NextRequest, context?: { params: any }) => {
       const startTime = Date.now()
       
+      // Await params for Next.js 15+ compatibility
+      // This fixes the "params should be awaited before using its properties" warning
+      const resolvedParams = context?.params ? await context.params : undefined
+      
       // Initialize context object
       const handlerContext: {
         userId?: string
@@ -65,7 +69,7 @@ export function createAPIHandler<
         params?: any
       } = {
         request,
-        params: context?.params,
+        params: resolvedParams,
       }
       
       // Authentication

@@ -409,4 +409,4 @@ pnpm db:seed      # Seed database
 
 ---
 
-*This workflow document should be referenced throughout development and updated as the project evolves.* 
+*This workflow document should be referenced throughout development and updated as the project evolves.* A

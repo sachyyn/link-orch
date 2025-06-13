@@ -6,7 +6,8 @@ const isProtectedRoute = createRouteMatcher([
   '/analytics(.*)',
   '/events(.*)',
   '/leads(.*)',
-  '/settings(.*)'
+  '/settings(.*)',
+  '/onboarding(.*)'
 ])
 
 export default clerkMiddleware(async (auth, req) => {

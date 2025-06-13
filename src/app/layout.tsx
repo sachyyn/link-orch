@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import {
   ClerkProvider,
   SignInButton,
@@ -10,19 +10,14 @@ import {
 } from "@clerk/nextjs";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Butter Chat",
-  description: "AI-powered chat application with real-time sync",
+  title: "LinkedinMaster Pro",
+  description: "All-in-one LinkedIn management platform for content creators and thought leaders",
 };
 
 export default function RootLayout({
@@ -34,20 +29,25 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${inter.variable} font-sans antialiased`}
         >
-          <header className="border-b border-gray-200 bg-white px-4 py-3">
+          <header className="border-b border-gray-200 bg-white px-4 py-4">
             <div className="mx-auto flex max-w-7xl items-center justify-between">
-              <h1 className="text-xl font-semibold text-gray-900">Butter Chat</h1>
+              <div className="flex items-center space-x-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black">
+                  <span className="text-sm font-bold text-white">LM</span>
+                </div>
+                <h1 className="text-xl font-semibold text-gray-900">LinkedinMaster Pro</h1>
+              </div>
               <div className="flex items-center space-x-4">
                 <SignedOut>
                   <SignInButton mode="modal">
-                    <button className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    <button className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors">
                       Sign in
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    <button className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors">
                       Sign up
                     </button>
                   </SignUpButton>

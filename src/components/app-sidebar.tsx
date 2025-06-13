@@ -7,6 +7,7 @@ import {
   Target,
   Settings,
   Plus,
+  MessageSquare,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -45,6 +46,11 @@ const items = [
     title: "Analytics",
     url: "/dashboard/analytics",
     icon: BarChart3,
+  },
+  {
+    title: "Engagement",
+    url: "/dashboard/engagement",
+    icon: MessageSquare,
   },
   {
     title: "Leads",

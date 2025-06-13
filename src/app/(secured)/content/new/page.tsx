@@ -12,11 +12,6 @@ export default async function NewContentPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <DashboardHeader 
-        title="Create New Post" 
-        description="Craft your LinkedIn content with rich formatting and scheduling"
-      />
-
       <div className="flex-1 overflow-auto">
         <ContentEditor />
       </div>

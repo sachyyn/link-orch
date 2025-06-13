@@ -12,11 +12,6 @@ export default async function ContentPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <DashboardHeader 
-        title="Content Management" 
-        description="Create, schedule, and manage your LinkedIn content"
-      />
-
       <div className="flex-1 overflow-auto">
         <ContentManagement />
       </div>

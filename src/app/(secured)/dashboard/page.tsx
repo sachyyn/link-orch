@@ -12,10 +12,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <DashboardHeader 
-        title="Dashboard" 
-        description="Welcome back to LinkedinMaster Pro"
-      />
 
       <div className="flex-1 overflow-auto">
         <DashboardContent />

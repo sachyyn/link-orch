@@ -20,10 +20,6 @@ export default async function EditContentPage({ params }: EditContentPageProps) 
 
   return (
     <div className="flex h-screen flex-col">
-      <DashboardHeader 
-        title="Edit Post" 
-        description={`Editing post #${id}`}
-      />
 
       <div className="flex-1 overflow-auto">
         <ContentEditor postId={id} />

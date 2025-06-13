@@ -49,10 +49,23 @@ interface Post {
   updatedAt: string
 }
 
+interface ContentPillar {
+  id: string
+  name: string
+  description?: string
+  color: string
+  targetPercentage?: number
+  postCount: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  userId: string
+}
+
 interface ContentTableProps {
   posts: Post[]
   searchQuery: string
-  pillars: any[]
+  pillars: ContentPillar[]
 }
 
 const statusColors = {
@@ -63,6 +76,8 @@ const statusColors = {
   archived: 'bg-yellow-100 text-yellow-800 border-yellow-200',
 }
 
+// Note: pillars parameter is passed for future filtering functionality
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ContentTable({ posts, searchQuery, pillars }: ContentTableProps) {
   const router = useRouter()
   const [data, setData] = useState<Post[]>(posts)

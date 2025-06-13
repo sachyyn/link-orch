@@ -1,3 +1,8 @@
+CREATE TYPE "public"."ai_action_type" AS ENUM('content_generation', 'content_regeneration', 'image_generation', 'content_refinement', 'asset_creation');--> statement-breakpoint
+CREATE TYPE "public"."asset_type" AS ENUM('image', 'carousel', 'infographic', 'banner', 'thumbnail', 'logo', 'chart');--> statement-breakpoint
+CREATE TYPE "public"."content_tone" AS ENUM('professional', 'casual', 'thought-leader', 'provocative', 'educational', 'inspirational', 'conversational', 'custom');--> statement-breakpoint
+CREATE TYPE "public"."content_type" AS ENUM('text-post', 'carousel', 'video-script', 'poll', 'article', 'story', 'announcement');--> statement-breakpoint
+CREATE TYPE "public"."session_status" AS ENUM('ideation', 'generating', 'asset-creation', 'ready', 'completed', 'archived');--> statement-breakpoint
 CREATE TYPE "public"."event_status" AS ENUM('draft', 'published', 'ongoing', 'completed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."event_type" AS ENUM('webinar', 'workshop', 'conference', 'networking', 'interview', 'meeting');--> statement-breakpoint
 CREATE TYPE "public"."lead_source" AS ENUM('linkedin_post', 'linkedin_message', 'event', 'referral', 'website', 'other');--> statement-breakpoint
@@ -6,8 +11,108 @@ CREATE TYPE "public"."post_status" AS ENUM('draft', 'scheduled', 'published', 'f
 CREATE TYPE "public"."post_type" AS ENUM('text', 'image', 'video', 'document', 'poll', 'article');--> statement-breakpoint
 CREATE TYPE "public"."subscription_status" AS ENUM('active', 'cancelled', 'expired', 'trial');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('free', 'pro', 'enterprise', 'admin');--> statement-breakpoint
+CREATE TABLE "ai_content_versions" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"session_id" uuid NOT NULL,
+	"version_number" integer NOT NULL,
+	"generation_batch" integer DEFAULT 1,
+	"content" text NOT NULL,
+	"content_length" integer,
+	"estimated_read_time" integer,
+	"hashtags" varchar(500),
+	"mentions" varchar(500),
+	"call_to_action" text,
+	"model_used" varchar(100) NOT NULL,
+	"tokens_used" integer,
+	"generation_time" integer,
+	"prompt" text,
+	"is_selected" boolean DEFAULT false,
+	"user_rating" integer,
+	"user_feedback" text,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "ai_generated_assets" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"session_id" uuid NOT NULL,
+	"asset_type" "asset_type" NOT NULL,
+	"file_name" varchar(255) NOT NULL,
+	"file_url" varchar(500) NOT NULL,
+	"file_size" integer,
+	"prompt" text NOT NULL,
+	"model" varchar(100),
+	"style" varchar(100),
+	"dimensions" varchar(50),
+	"generation_time" integer,
+	"generation_cost" varchar(20),
+	"is_selected" boolean DEFAULT false,
+	"is_downloaded" boolean DEFAULT false,
+	"download_count" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "ai_post_sessions" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"project_id" uuid NOT NULL,
+	"post_idea" text NOT NULL,
+	"additional_context" text,
+	"target_content_type" "content_type" DEFAULT 'text-post' NOT NULL,
+	"selected_model" varchar(100) NOT NULL,
+	"custom_prompt" text,
+	"status" "session_status" DEFAULT 'ideation' NOT NULL,
+	"current_step" varchar(50) DEFAULT 'ideation',
+	"total_versions" integer DEFAULT 0 NOT NULL,
+	"selected_version_id" uuid,
+	"needs_asset" boolean DEFAULT false,
+	"asset_generated" boolean DEFAULT false,
+	"final_content" text,
+	"is_completed" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "ai_projects" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"description" text,
+	"tone" "content_tone" DEFAULT 'professional' NOT NULL,
+	"content_types" varchar(500) NOT NULL,
+	"guidelines" text NOT NULL,
+	"target_audience" text,
+	"key_topics" text,
+	"brand_voice" text,
+	"content_pillars" text,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"default_model" varchar(100) DEFAULT 'gemini-2.0-flash-exp',
+	"total_sessions" integer DEFAULT 0 NOT NULL,
+	"total_posts" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "ai_usage_logs" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"project_id" uuid,
+	"session_id" uuid,
+	"action_type" "ai_action_type" NOT NULL,
+	"model_used" varchar(100) NOT NULL,
+	"tokens_used" integer,
+	"processing_time" integer,
+	"api_cost" varchar(20),
+	"request_payload" text,
+	"response_size" integer,
+	"is_successful" boolean DEFAULT true,
+	"error_message" text,
+	"retry_count" integer DEFAULT 0,
+	"user_agent" varchar(500),
+	"ip_address" varchar(45),
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "analytics_goals" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"goal_type" varchar(50) NOT NULL,
 	"target_value" integer NOT NULL,
@@ -20,7 +125,7 @@ CREATE TABLE "analytics_goals" (
 );
 --> statement-breakpoint
 CREATE TABLE "content_insights" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"insight_type" varchar(50) NOT NULL,
 	"title" varchar(300) NOT NULL,
@@ -35,9 +140,9 @@ CREATE TABLE "content_insights" (
 );
 --> statement-breakpoint
 CREATE TABLE "engagement_metrics" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
-	"post_id" integer,
+	"post_id" uuid,
 	"interaction_type" varchar(50) NOT NULL,
 	"interaction_value" text,
 	"interactor_linkedin_id" varchar(100),
@@ -49,7 +154,7 @@ CREATE TABLE "engagement_metrics" (
 );
 --> statement-breakpoint
 CREATE TABLE "performance_snapshots" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"snapshot_type" varchar(20) NOT NULL,
 	"snapshot_date" date NOT NULL,
@@ -60,8 +165,8 @@ CREATE TABLE "performance_snapshots" (
 	"follower_growth" integer DEFAULT 0,
 	"connection_growth" integer DEFAULT 0,
 	"profile_views" integer DEFAULT 0,
-	"top_performing_post" integer,
-	"top_performing_pillar" integer,
+	"top_performing_post" uuid,
+	"top_performing_pillar" uuid,
 	"pillar_metrics" jsonb,
 	"likes_breakdown" integer DEFAULT 0,
 	"comments_breakdown" integer DEFAULT 0,
@@ -73,9 +178,9 @@ CREATE TABLE "performance_snapshots" (
 );
 --> statement-breakpoint
 CREATE TABLE "post_analytics" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
-	"post_id" integer NOT NULL,
+	"post_id" uuid NOT NULL,
 	"linkedin_post_id" varchar(100),
 	"impressions" integer DEFAULT 0,
 	"likes" integer DEFAULT 0,
@@ -99,7 +204,7 @@ CREATE TABLE "post_analytics" (
 );
 --> statement-breakpoint
 CREATE TABLE "user_activity" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"activity_type" varchar(50) NOT NULL,
 	"description" text,
@@ -107,13 +212,13 @@ CREATE TABLE "user_activity" (
 	"ip_address" varchar(45),
 	"user_agent" text,
 	"referrer" varchar(500),
-	"related_post_id" integer,
-	"related_pillar_id" integer,
+	"related_post_id" uuid,
+	"related_pillar_id" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "campaigns" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"name" varchar(200) NOT NULL,
 	"description" text,
@@ -130,16 +235,15 @@ CREATE TABLE "campaigns" (
 	"total_engagement" integer DEFAULT 0,
 	"total_leads" integer DEFAULT 0,
 	"total_conversions" integer DEFAULT 0,
-	"cost_per_lead" numeric(10, 2) DEFAULT '0.00',
-	"associated_posts" jsonb,
-	"associated_events" jsonb,
+	"content_pieces" jsonb,
+	"landing_pages" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "event_attendees" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"event_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"event_id" uuid NOT NULL,
 	"user_id" varchar(255),
 	"name" varchar(200) NOT NULL,
 	"email" varchar(255) NOT NULL,
@@ -159,7 +263,7 @@ CREATE TABLE "event_attendees" (
 );
 --> statement-breakpoint
 CREATE TABLE "events" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"title" varchar(300) NOT NULL,
 	"description" text,
@@ -179,7 +283,7 @@ CREATE TABLE "events" (
 	"currency" varchar(3) DEFAULT 'USD',
 	"linkedin_event_id" varchar(100),
 	"linkedin_event_url" varchar(500),
-	"promotion_post_id" integer,
+	"promotion_post_id" uuid,
 	"agenda" jsonb,
 	"speakers" jsonb,
 	"materials" jsonb,
@@ -194,8 +298,8 @@ CREATE TABLE "events" (
 );
 --> statement-breakpoint
 CREATE TABLE "lead_interactions" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"lead_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"lead_id" uuid NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"interaction_type" varchar(50) NOT NULL,
 	"direction" varchar(20) NOT NULL,
@@ -210,7 +314,7 @@ CREATE TABLE "lead_interactions" (
 );
 --> statement-breakpoint
 CREATE TABLE "leads" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"name" varchar(200) NOT NULL,
 	"email" varchar(255),
@@ -230,8 +334,8 @@ CREATE TABLE "leads" (
 	"last_contact_date" date,
 	"next_follow_up_date" date,
 	"total_interactions" integer DEFAULT 0,
-	"source_post_id" integer,
-	"source_event_id" integer,
+	"source_post_id" uuid,
+	"source_event_id" uuid,
 	"referrer_name" varchar(200),
 	"lead_score" integer DEFAULT 0,
 	"qualification_notes" text,
@@ -243,37 +347,39 @@ CREATE TABLE "leads" (
 );
 --> statement-breakpoint
 CREATE TABLE "services" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"name" varchar(200) NOT NULL,
 	"description" text,
 	"category" varchar(100),
+	"price_type" varchar(50),
 	"base_price" numeric(10, 2),
 	"currency" varchar(3) DEFAULT 'USD',
-	"pricing_model" varchar(50),
-	"delivery_time" varchar(100),
-	"delivery_method" varchar(100),
-	"requirements" jsonb,
-	"deliverables" jsonb,
+	"delivery_method" varchar(50),
+	"duration" varchar(100),
 	"is_active" boolean DEFAULT true,
-	"max_concurrent_projects" integer DEFAULT 1,
-	"current_projects" integer DEFAULT 0,
+	"requires_consultation" boolean DEFAULT true,
+	"max_clients_per_month" integer,
+	"package_includes" jsonb,
+	"prerequisites" text,
+	"target_audience" text,
+	"total_inquiries" integer DEFAULT 0,
 	"total_bookings" integer DEFAULT 0,
-	"average_rating" numeric(3, 2) DEFAULT '0.00',
+	"avg_rating" numeric(3, 2) DEFAULT '0.00',
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "content_calendar" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
-	"post_id" integer,
+	"post_id" uuid,
 	"title" varchar(300) NOT NULL,
 	"date" timestamp NOT NULL,
 	"time_slot" varchar(20),
 	"status" varchar(50) DEFAULT 'planned',
 	"priority" varchar(20) DEFAULT 'medium',
-	"pillar_id" integer,
+	"pillar_id" uuid,
 	"content_ideas" jsonb,
 	"notes" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -281,7 +387,7 @@ CREATE TABLE "content_calendar" (
 );
 --> statement-breakpoint
 CREATE TABLE "content_drafts" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"title" varchar(500),
 	"content" text,
@@ -293,7 +399,7 @@ CREATE TABLE "content_drafts" (
 );
 --> statement-breakpoint
 CREATE TABLE "content_pillars" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"name" varchar(200) NOT NULL,
 	"description" text,
@@ -309,9 +415,9 @@ CREATE TABLE "content_pillars" (
 );
 --> statement-breakpoint
 CREATE TABLE "content_posts" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
-	"pillar_id" integer,
+	"pillar_id" uuid,
 	"title" varchar(500),
 	"content" text NOT NULL,
 	"post_type" "post_type" DEFAULT 'text' NOT NULL,
@@ -336,9 +442,9 @@ CREATE TABLE "content_posts" (
 );
 --> statement-breakpoint
 CREATE TABLE "content_templates" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
-	"pillar_id" integer,
+	"pillar_id" uuid,
 	"name" varchar(200) NOT NULL,
 	"description" text,
 	"template" text NOT NULL,
@@ -347,13 +453,13 @@ CREATE TABLE "content_templates" (
 	"usage_count" integer DEFAULT 0,
 	"tags" jsonb,
 	"default_hashtags" jsonb,
-	"default_pillar_id" integer,
+	"default_pillar_id" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user_profiles" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"job_title" varchar(200),
 	"company" varchar(200),
@@ -377,7 +483,7 @@ CREATE TABLE "user_profiles" (
 );
 --> statement-breakpoint
 CREATE TABLE "user_subscriptions" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 	"status" "subscription_status" DEFAULT 'trial' NOT NULL,
 	"plan_type" varchar(50) NOT NULL,
@@ -406,6 +512,13 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+ALTER TABLE "ai_content_versions" ADD CONSTRAINT "ai_content_versions_session_id_ai_post_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."ai_post_sessions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_generated_assets" ADD CONSTRAINT "ai_generated_assets_session_id_ai_post_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."ai_post_sessions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_post_sessions" ADD CONSTRAINT "ai_post_sessions_project_id_ai_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."ai_projects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_projects" ADD CONSTRAINT "ai_projects_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_usage_logs" ADD CONSTRAINT "ai_usage_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_usage_logs" ADD CONSTRAINT "ai_usage_logs_project_id_ai_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."ai_projects"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_usage_logs" ADD CONSTRAINT "ai_usage_logs_session_id_ai_post_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."ai_post_sessions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "analytics_goals" ADD CONSTRAINT "analytics_goals_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "content_insights" ADD CONSTRAINT "content_insights_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "engagement_metrics" ADD CONSTRAINT "engagement_metrics_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

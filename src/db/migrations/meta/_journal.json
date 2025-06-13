@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1749808423539,
-      "tag": "0000_fine_zuras",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1749831312915,
-      "tag": "0001_premium_night_nurse",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1749837222805,
-      "tag": "0002_sudden_arclight",
+      "when": 1749845492957,
+      "tag": "0000_wooden_black_tom",
       "breakpoints": true
     }
   ]

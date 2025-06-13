@@ -75,7 +75,7 @@ export function ContentTable({ posts, searchQuery, pillars }: ContentTableProps)
   }, [posts])
 
   const handleEdit = (postId: number) => {
-    router.push(`/dashboard/content/${postId}/edit`)
+    router.push(`/content/${postId}/edit`)
   }
 
   const handleDuplicate = (postId: number) => {

@@ -93,7 +93,7 @@ export const apiClient = {
 
   // Dashboard APIs
   dashboard: {
-    getStats: () => apiClient.get('/dashboard/stats'),
+    getStats: () => apiClient.get('/stats'),
   },
 
   // AI Creator APIs

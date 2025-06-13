@@ -70,7 +70,7 @@ export function ContentManagement() {
   } = usePillars()
 
   const handleNewPost = () => {
-    router.push('/dashboard/content/new')
+    router.push('/content/new')
   }
 
   // Loading state

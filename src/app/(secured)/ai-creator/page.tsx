@@ -284,7 +284,7 @@ export default function AICreatorPage() {
                     <span>Created {new Date(project.createdAt).toLocaleDateString()}</span>
                   </div>
 
-                  <Link href={`/dashboard/ai-creator/project/${project.id}`}>
+                  <Link href={`/ai-creator/project/${project.id}`}>
                     <Button className="w-full" variant="outline">
                       Open Project
                     </Button>

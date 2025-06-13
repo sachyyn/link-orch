@@ -48,11 +48,11 @@ export function ContentCalendar({ posts, searchQuery, pillars }: ContentCalendar
   const handleAddPost = (day: Date) => {
     // Navigate to create post with pre-filled date
     const dateString = format(day, 'yyyy-MM-dd')
-    router.push(`/dashboard/content/new?date=${dateString}`)
+    router.push(`/content/new?date=${dateString}`)
   }
 
   const handleEditPost = (postId: number) => {
-    router.push(`/dashboard/content/${postId}/edit`)
+    router.push(`/content/${postId}/edit`)
   }
 
   return (

@@ -35,42 +35,42 @@ const items = [
   },
   {
     title: "Content",
-    url: "/dashboard/content",
+    url: "/content",
     icon: FileText,
   },
   {
     title: "AI Creator",
-    url: "/dashboard/ai-creator",
+    url: "/ai-creator",
     icon: Bot,
   },
   {
     title: "Calendar",
-    url: "/dashboard/calendar",
+    url: "/calendar",
     icon: Calendar,
   },
   {
     title: "Analytics",
-    url: "/dashboard/analytics",
+    url: "/analytics",
     icon: BarChart3,
   },
   {
     title: "Engagement",
-    url: "/dashboard/engagement",
+    url: "/engagement",
     icon: MessageSquare,
   },
   {
     title: "Leads",
-    url: "/dashboard/leads",
+    url: "/leads",
     icon: Users,
   },
   {
     title: "Events",
-    url: "/dashboard/events",
+    url: "/events",
     icon: Target,
   },
   {
     title: "Settings",
-    url: "/dashboard/settings",
+    url: "/settings",
     icon: Settings,
   },
 ]
@@ -79,12 +79,12 @@ const items = [
 const quickActions = [
   {
     title: "New Post",
-    url: "/dashboard/content/new",
+    url: "/content/new",
     icon: Plus,
   },
   {
     title: "Create Event",
-    url: "/dashboard/events/new",
+    url: "/events/new",
     icon: Calendar,
   },
 ]

@@ -120,7 +120,7 @@ export default function ProjectDetailPage() {
         <p className="text-muted-foreground mb-4">
           The requested AI Creator project could not be found.
         </p>
-        <Link href="/dashboard/ai-creator">
+        <Link href="/ai-creator">
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Projects
@@ -134,7 +134,7 @@ export default function ProjectDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/ai-creator">
+        <Link href="/ai-creator">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -271,7 +271,7 @@ export default function ProjectDetailPage() {
                     <span>{new Date(session.createdAt).toLocaleDateString()}</span>
                   </div>
 
-                  <Link href={`/dashboard/ai-creator/session/${session.id}`}>
+                  <Link href={`/ai-creator/session/${session.id}`}>
                     <Button className="w-full" variant="outline">
                       Open Session
                     </Button>

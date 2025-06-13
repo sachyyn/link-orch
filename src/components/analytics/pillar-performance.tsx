@@ -101,7 +101,7 @@ export function PillarPerformance() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-md font-medium">Content Pillar Performance</h3>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard/content" className="gap-2">
+          <Link href="/content" className="gap-2">
             <ExternalLink className="h-4 w-4" />
             Manage Pillars
           </Link>
@@ -192,7 +192,7 @@ export function PillarPerformance() {
                     {index > 2 && "📈 Growing pillar"}
                   </span>
                   <Button variant="ghost" size="sm" asChild className="text-xs h-auto py-1 px-2">
-                    <Link href={`/dashboard/content?pillar=${pillar.pillarId}`}>
+                    <Link href={`/content?pillar=${pillar.pillarId}`}>
                       View Posts
                     </Link>
                   </Button>

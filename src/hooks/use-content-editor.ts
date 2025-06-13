@@ -129,7 +129,7 @@ export function useContentEditor({ postId, initialData }: UseContentEditorProps 
       })
 
       // Navigate back to content list
-      router.push('/dashboard/content')
+      router.push('/content')
     } catch (error) {
       console.error('Error saving draft:', error)
       toast({
@@ -227,7 +227,7 @@ export function useContentEditor({ postId, initialData }: UseContentEditorProps 
       }
 
       // Navigate back to content list
-      router.push('/dashboard/content')
+      router.push('/content')
     } catch (error) {
       console.error('Error submitting post:', error)
       toast({

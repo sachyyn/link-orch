@@ -107,7 +107,7 @@ export function TopPerformingPosts() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-md font-medium">Top Performing Posts</h3>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard/content" className="gap-2">
+          <Link href="/content" className="gap-2">
             <ExternalLink className="h-4 w-4" />
             View All
           </Link>
@@ -165,7 +165,7 @@ export function TopPerformingPosts() {
                 {/* Action */}
                 <div className="flex items-center justify-between">
                   <Button variant="ghost" size="sm" asChild className="text-xs h-auto py-1 px-2">
-                    <Link href={`/dashboard/content/${post.postId}/edit`}>
+                    <Link href={`/content/${post.postId}/edit`}>
                       View Details
                     </Link>
                   </Button>

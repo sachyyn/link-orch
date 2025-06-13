@@ -3,10 +3,10 @@ import { getSessionAssets, createAsset } from '@/db/services/ai-creator-service'
 import { type AIGeneratedAsset, type CreateAssetInput } from '@/db/schema'
 import { z } from 'zod'
 
-// Validation schema for creating assets
+// Validation schema for asset creation
 const createAssetSchema = z.object({
   assetType: z.enum(['image', 'carousel', 'infographic', 'banner', 'thumbnail', 'logo', 'chart']),
-  fileName: z.string().min(1).max(255),
+  fileName: z.string().min(1),
   fileUrl: z.string().url(),
   fileSize: z.number().optional(),
   prompt: z.string().min(1),
@@ -22,18 +22,13 @@ interface AssetResponse extends Omit<AIGeneratedAsset, 'createdAt'> {
   createdAt: string
 }
 
-interface AssetListResponse {
-  assets: AssetResponse[]
-  sessionId: number
-}
-
 /**
  * GET /api/ai-creator/sessions/[id]/assets
  * 
- * Retrieves all assets for a specific session
+ * Retrieves all generated assets for a specific session
  * Only returns assets for sessions owned by the authenticated user
  */
-export const GET = createGetHandler<never, AssetListResponse>(
+export const GET = createGetHandler<never, AssetResponse[]>(
   async ({ userId, params }) => {
     if (!userId) {
       throw new Error('User ID is required')
@@ -43,24 +38,19 @@ export const GET = createGetHandler<never, AssetListResponse>(
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 
     // Get assets from database
     const assets = await getSessionAssets(userId, sessionId)
-    
-    // Transform dates to strings for JSON serialization
-    const transformedAssets = assets.map(asset => ({
+
+    // Transform for response
+    return assets.map(asset => ({
       ...asset,
       createdAt: asset.createdAt.toISOString(),
     }))
-
-    return {
-      assets: transformedAssets,
-      sessionId,
-    }
   },
   {
     requireAuth: true,
@@ -72,7 +62,7 @@ export const GET = createGetHandler<never, AssetListResponse>(
 /**
  * POST /api/ai-creator/sessions/[id]/assets
  * 
- * Creates a new asset for a specific session
+ * Creates a new generated asset for a specific session
  * Body schema: createAssetSchema
  */
 export const POST = createPostHandler<Omit<CreateAssetInput, 'sessionId'>, AssetResponse>(
@@ -85,8 +75,8 @@ export const POST = createPostHandler<Omit<CreateAssetInput, 'sessionId'>, Asset
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 
@@ -116,6 +106,8 @@ export const POST = createPostHandler<Omit<CreateAssetInput, 'sessionId'>, Asset
       dimensions,
       generationTime,
       generationCost,
+      isSelected: false,
+      isDownloaded: false,
     })
 
     // Transform for response

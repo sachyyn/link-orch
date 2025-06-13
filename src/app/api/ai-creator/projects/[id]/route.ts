@@ -45,8 +45,8 @@ export const GET = createGetHandler<never, ProjectResponse>(
       throw new Error('Project ID is required')
     }
 
-    const projectId = parseInt(params.id as string)
-    if (isNaN(projectId)) {
+    const projectId = params.id as string
+    if (!projectId.trim()) {
       throw new Error('Invalid project ID')
     }
 
@@ -87,8 +87,8 @@ export const PUT = createPutHandler<Partial<CreateProjectInput>, ProjectResponse
       throw new Error('Project ID is required')
     }
 
-    const projectId = parseInt(params.id as string)
-    if (isNaN(projectId)) {
+    const projectId = params.id as string
+    if (!projectId.trim()) {
       throw new Error('Invalid project ID')
     }
 
@@ -113,7 +113,7 @@ export const PUT = createPutHandler<Partial<CreateProjectInput>, ProjectResponse
         if (!Array.isArray(parsedContentTypes)) {
           throw new Error('Content types must be a JSON array')
         }
-      } catch (error) {
+      } catch {
         throw new Error('Invalid content types format - must be valid JSON array')
       }
     }
@@ -169,8 +169,8 @@ export const DELETE = createDeleteHandler<DeleteResponse>(
       throw new Error('Project ID is required')
     }
 
-    const projectId = parseInt(params.id as string)
-    if (isNaN(projectId)) {
+    const projectId = params.id as string
+    if (!projectId.trim()) {
       throw new Error('Invalid project ID')
     }
 

@@ -33,11 +33,8 @@ export const GET = createGetHandler<never, PostResponse>(
       throw new Error('Post ID is required')
     }
 
-    const postId = parseInt(params.id as string)
-    if (isNaN(postId)) {
-      throw new Error('Invalid post ID')
-    }
-
+    const postId = params.id as string
+    
     // Get post from database
     const post = await getPostById(userId, postId)
     
@@ -80,11 +77,8 @@ export const PUT = createPutHandler<any, PostResponse>(
       throw new Error('Post ID is required')
     }
 
-    const postId = parseInt(params.id as string)
-    if (isNaN(postId)) {
-      throw new Error('Invalid post ID')
-    }
-
+    const postId = params.id as string
+    
     const {
       title,
       content,
@@ -156,11 +150,8 @@ export const DELETE = createDeleteHandler<DeleteResponse>(
       throw new Error('Post ID is required')
     }
 
-    const postId = parseInt(params.id as string)
-    if (isNaN(postId)) {
-      throw new Error('Invalid post ID')
-    }
-
+    const postId = params.id as string
+    
     // Delete post using database service
     const success = await deletePost(userId, postId)
     

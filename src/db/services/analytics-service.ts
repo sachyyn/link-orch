@@ -3,10 +3,9 @@ import {
   contentPosts,
   eq, 
   and,
-  desc,
   count
 } from '@/db/schema'
-import { gte, lte } from 'drizzle-orm'
+import { gte } from 'drizzle-orm'
 
 // ================================
 // Analytics Service (Simplified)

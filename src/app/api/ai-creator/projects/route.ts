@@ -1,6 +1,6 @@
 import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
-import { getProjects, createProject, type ProjectFilters, type ProjectListResult } from '@/db/services/ai-creator-service'
-import { type AIProject, type CreateProjectInput } from '@/db/schema'
+import { getProjects, createProject, type ProjectFilters } from '@/db/services/ai-creator-service'
+import { type AIProject } from '@/db/schema'
 import { z } from 'zod'
 import { createProjectApiSchema, type CreateProjectApiInput } from '@/lib/schemas'
 
@@ -103,7 +103,7 @@ export const POST = createPostHandler<CreateProjectApiInput, ProjectResponse>(
       if (!Array.isArray(parsedContentTypes)) {
         throw new Error('Content types must be a JSON array')
       }
-    } catch (error) {
+    } catch {
       throw new Error('Invalid content types format - must be valid JSON array')
     }
 

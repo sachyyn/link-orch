@@ -1,5 +1,4 @@
 import { createGetHandler } from '@/lib/api-wrapper'
-import { z } from 'zod'
 
 // Types for engagement metrics
 interface EngagementMetric {
@@ -67,10 +66,9 @@ interface MetricsListResponse {
  * Retrieves engagement metrics and analytics data
  * Includes response rates, sentiment analysis, and performance trends
  */
-export const GET = createGetHandler<any, MetricsListResponse>(
-  async ({ userId, query }) => {
+export const GET = createGetHandler<Record<string, unknown>, MetricsListResponse>(
+  async ({ query }) => {
     const {
-      period = 'month',
       startDate,
       endDate,
       postId

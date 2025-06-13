@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const { sessionId, postIdea, tone = 'professional', contentType = 'post', guidelines, variations } = validation.data;
 
     // Verify session exists and user owns it
-    const session = await getSessionById(userId, parseInt(sessionId));
+    const session = await getSessionById(userId, sessionId);
     if (!session) {
       return NextResponse.json(
         { error: 'Session not found' },
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     await createUsageLog({
       userId,
       projectId: project.id,
-      sessionId: parseInt(sessionId),
+      sessionId: sessionId,
       actionType: 'content_generation',
       modelUsed: 'gemini-2.0-flash-exp',
       requestPayload: JSON.stringify({
@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
     // Save all content versions to database
     const savedVersions = [];
     for (let i = 0; i < contentVariations.length; i++) {
-      const version = await createContentVersions(userId, parseInt(sessionId), [{
-        sessionId: parseInt(sessionId),
+      const version = await createContentVersions(userId, sessionId, [{
+        sessionId: sessionId,
         versionNumber: i + 1,
         content: contentVariations[i],
         modelUsed: 'gemini-2.0-flash-exp',
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     await createUsageLog({
       userId,
       projectId: project.id,
-      sessionId: parseInt(sessionId),
+      sessionId: sessionId,
       actionType: 'content_generation',
       modelUsed: 'gemini-2.0-flash-exp',
       tokensUsed: result.usage?.totalTokens || 0,
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Update session with generation details
-    await updateSession(userId, parseInt(sessionId), {
+    await updateSession(userId, sessionId, {
       postIdea,
       additionalContext: guidelines || '',
       status: 'generating',

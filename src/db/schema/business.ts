@@ -1,4 +1,5 @@
-import { pgTable, varchar, text, timestamp, boolean, integer, serial, pgEnum, jsonb, decimal, date } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, text, timestamp, boolean, integer, uuid, pgEnum, jsonb, decimal, date } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { users } from './users'
 import { contentPosts } from './content'
 
@@ -16,7 +17,7 @@ export const leadSourceEnum = pgEnum('lead_source', ['linkedin_post', 'linkedin_
 
 // Events - LinkedIn events and professional gatherings
 export const events = pgTable('events', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Event details
@@ -46,7 +47,7 @@ export const events = pgTable('events', {
   // LinkedIn integration
   linkedinEventId: varchar('linkedin_event_id', { length: 100 }),
   linkedinEventUrl: varchar('linkedin_event_url', { length: 500 }),
-  promotionPostId: integer('promotion_post_id').references(() => contentPosts.id),
+  promotionPostId: uuid('promotion_post_id').references(() => contentPosts.id),
   
   // Event content
   agenda: jsonb('agenda'), // Array of {time, topic, speaker}
@@ -69,8 +70,8 @@ export const events = pgTable('events', {
 
 // Event attendees - people registered for events
 export const eventAttendees = pgTable('event_attendees', {
-  id: serial('id').primaryKey(),
-  eventId: integer('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
+  eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   userId: varchar('user_id', { length: 255 }).references(() => users.id, { onDelete: 'cascade' }),
   
   // Attendee information (for external attendees)
@@ -100,7 +101,7 @@ export const eventAttendees = pgTable('event_attendees', {
 
 // Leads - potential business opportunities
 export const leads = pgTable('leads', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Lead information
@@ -130,8 +131,8 @@ export const leads = pgTable('leads', {
   totalInteractions: integer('total_interactions').default(0),
   
   // Source tracking
-  sourcePostId: integer('source_post_id').references(() => contentPosts.id),
-  sourceEventId: integer('source_event_id').references(() => events.id),
+  sourcePostId: uuid('source_post_id').references(() => contentPosts.id),
+  sourceEventId: uuid('source_event_id').references(() => events.id),
   referrerName: varchar('referrer_name', { length: 200 }),
   
   // Lead scoring
@@ -149,8 +150,8 @@ export const leads = pgTable('leads', {
 
 // Lead interactions - track all touchpoints with leads
 export const leadInteractions = pgTable('lead_interactions', {
-  id: serial('id').primaryKey(),
-  leadId: integer('lead_id').notNull().references(() => leads.id, { onDelete: 'cascade' }),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
+  leadId: uuid('lead_id').notNull().references(() => leads.id, { onDelete: 'cascade' }),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Interaction details
@@ -173,7 +174,7 @@ export const leadInteractions = pgTable('lead_interactions', {
 
 // Campaigns - marketing campaigns and outreach
 export const campaigns = pgTable('campaigns', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Campaign details
@@ -200,11 +201,10 @@ export const campaigns = pgTable('campaigns', {
   totalEngagement: integer('total_engagement').default(0),
   totalLeads: integer('total_leads').default(0),
   totalConversions: integer('total_conversions').default(0),
-  costPerLead: decimal('cost_per_lead', { precision: 10, scale: 2 }).default('0.00'),
   
-  // Content association
-  associatedPosts: jsonb('associated_posts'), // Array of post IDs
-  associatedEvents: jsonb('associated_events'), // Array of event IDs
+  // Content and materials
+  contentPieces: jsonb('content_pieces'), // Array of content used in campaign
+  landingPages: jsonb('landing_pages'), // Array of landing page URLs
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -212,35 +212,37 @@ export const campaigns = pgTable('campaigns', {
 
 // Services - professional services offered
 export const services = pgTable('services', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Service details
   name: varchar('name', { length: 200 }).notNull(),
   description: text('description'),
-  category: varchar('category', { length: 100 }),
+  category: varchar('category', { length: 100 }), // consulting, coaching, training, etc.
   
   // Pricing
+  priceType: varchar('price_type', { length: 50 }), // fixed, hourly, project_based, custom
   basePrice: decimal('base_price', { precision: 10, scale: 2 }),
   currency: varchar('currency', { length: 3 }).default('USD'),
-  pricingModel: varchar('pricing_model', { length: 50 }), // fixed, hourly, project, retainer
   
   // Service delivery
-  deliveryTime: varchar('delivery_time', { length: 100 }),
-  deliveryMethod: varchar('delivery_method', { length: 100 }), // remote, onsite, hybrid
+  deliveryMethod: varchar('delivery_method', { length: 50 }), // remote, onsite, hybrid
+  duration: varchar('duration', { length: 100 }), // e.g., "2 hours", "1 week", "ongoing"
   
-  // Requirements and specifications
-  requirements: jsonb('requirements'), // Array of requirements
-  deliverables: jsonb('deliverables'), // Array of deliverables
-  
-  // Availability
+  // Availability and settings
   isActive: boolean('is_active').default(true),
-  maxConcurrentProjects: integer('max_concurrent_projects').default(1),
-  currentProjects: integer('current_projects').default(0),
+  requiresConsultation: boolean('requires_consultation').default(true),
+  maxClientsPerMonth: integer('max_clients_per_month'),
   
-  // Performance
+  // Content and materials
+  packageIncludes: jsonb('package_includes'), // Array of included items
+  prerequisites: text('prerequisites'),
+  targetAudience: text('target_audience'),
+  
+  // Analytics
+  totalInquiries: integer('total_inquiries').default(0),
   totalBookings: integer('total_bookings').default(0),
-  averageRating: decimal('average_rating', { precision: 3, scale: 2 }).default('0.00'),
+  avgRating: decimal('avg_rating', { precision: 3, scale: 2 }).default('0.00'),
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

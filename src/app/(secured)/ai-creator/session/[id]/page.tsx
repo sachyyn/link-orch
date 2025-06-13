@@ -42,7 +42,7 @@ const generateContentSchema = z.object({
   tone: z.enum(["professional", "casual", "thought-leader", "provocative", "educational", "inspirational", "conversational", "custom"]).optional(),
   contentType: z.enum(["post", "article", "poll", "carousel"]).optional(),
   guidelines: z.string().optional(),
-  variations: z.number().min(1).max(5).default(3),
+  variations: z.number().min(1).max(5),
 })
 
 // Asset generation form schema
@@ -110,27 +110,21 @@ export default function SessionDetailPage() {
   const project = projectData
   const versions = versionsData?.versions || []
   const assets = assetsData?.assets || []
-  const selectedVersion = versions.find(v => v.selected)
+  const selectedVersion = versions.find((v: { isSelected?: boolean }) => v.isSelected)
 
   // Debug logging
   console.log("Session data:", session)
   console.log("Versions:", versions)
 
-  // Content generation handler
-  const onGenerateContent = async (data: GenerateContentForm) => {
+  // Version selection handler
+  const onSelectVersion = async (versionId: string) => {
     try {
-      await generateContentMutation.mutateAsync({
-        sessionId: sessionId,
-        postIdea: session?.postIdea || "",
-        tone: data.tone || project?.tone,
-        contentType: data.contentType || project?.contentType,
-        guidelines: data.guidelines || project?.guidelines,
-        variations: data.variations,
-      })
-      toast.success("Content generated successfully!")
+      await selectVersionMutation.mutateAsync(versionId)
+      toast.success("Version selected!")
       refetchVersions()
-    } catch (error) {
-      toast.error("Failed to generate content. Please try again.")
+    } catch (_error) {
+      console.error("Failed to select version:", _error)
+      toast.error("Failed to select version.")
     }
   }
 
@@ -146,19 +140,28 @@ export default function SessionDetailPage() {
       })
       toast.success("Asset generation started!")
       refetchAssets()
-    } catch (error) {
+    } catch (_error) {
+      console.error("Failed to generate asset:", _error)
       toast.error("Failed to generate asset. Please try again.")
     }
   }
 
-  // Version selection handler
-  const onSelectVersion = async (versionId: number) => {
+  // Content generation handler
+  const onGenerateContent = async (data: GenerateContentForm) => {
     try {
-      await selectVersionMutation.mutateAsync(versionId)
-      toast.success("Version selected!")
+      await generateContentMutation.mutateAsync({
+        sessionId: sessionId,
+        postIdea: session?.postIdea || "",
+        tone: data.tone || project?.tone,
+        contentType: data.contentType || project?.contentType,
+        guidelines: data.guidelines || project?.guidelines,
+        variations: data.variations,
+      })
+      toast.success("Content generated successfully!")
       refetchVersions()
-    } catch (error) {
-      toast.error("Failed to select version.")
+    } catch (_error) {
+      console.error("Failed to generate content:", _error)
+      toast.error("Failed to generate content. Please try again.")
     }
   }
 
@@ -278,7 +281,7 @@ export default function SessionDetailPage() {
                   <Label>Tone Override</Label>
                   <Select 
                     value={contentForm.watch("tone")} 
-                    onValueChange={(value) => contentForm.setValue("tone", value as any)}
+                    onValueChange={(value) => contentForm.setValue("tone", value as "professional" | "casual" | "thought-leader" | "provocative" | "educational" | "inspirational" | "conversational" | "custom" | undefined)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Use project default" />
@@ -352,17 +355,17 @@ export default function SessionDetailPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {versions.map((version: any, index: number) => (
+                {versions.map((version: { id: string; versionNumber: number; isSelected?: boolean; content: string }) => (
                   <div 
                     key={version.id} 
-                    className={`border rounded-lg p-4 ${version.selected ? 'ring-2 ring-primary' : ''}`}
+                    className={`border rounded-lg p-4 ${version.isSelected ? 'ring-2 ring-primary' : ''}`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Badge variant={version.selected ? 'default' : 'secondary'}>
+                        <Badge variant={version.isSelected ? 'default' : 'secondary'}>
                           Version {version.versionNumber}
                         </Badge>
-                        {version.selected && (
+                        {version.isSelected && (
                           <Badge variant="outline" className="text-green-600">
                             Selected
                           </Badge>
@@ -377,7 +380,7 @@ export default function SessionDetailPage() {
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
-                        {!version.selected && (
+                        {!version.isSelected && (
                           <Button
                             size="sm"
                             onClick={() => onSelectVersion(version.id)}
@@ -414,7 +417,7 @@ export default function SessionDetailPage() {
                   <Label>Asset Type</Label>
                   <Select 
                     value={assetForm.watch("assetType")} 
-                    onValueChange={(value) => assetForm.setValue("assetType", value as any)}
+                    onValueChange={(value) => assetForm.setValue("assetType", value as "image" | "carousel" | "infographic" | "banner" | "thumbnail" | "logo" | "chart")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select asset type" />
@@ -492,7 +495,7 @@ export default function SessionDetailPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                {assets.map((asset: any) => (
+                {assets.map((asset: { id: string; assetType: string; prompt: string; fileUrl?: string }) => (
                   <div key={asset.id} className="border rounded-lg p-4">
                     <div className="space-y-2">
                       <Badge variant="outline">{asset.assetType}</Badge>
@@ -545,7 +548,7 @@ export default function SessionDetailPage() {
                   <div>
                     <Label className="font-medium">Attached Assets</Label>
                     <div className="mt-2 flex gap-2">
-                      {assets.slice(0, 3).map((asset: any) => (
+                      {assets.slice(0, 3).map((asset: { id: string; assetType: string }) => (
                         <Badge key={asset.id} variant="outline">
                           {asset.assetType}
                         </Badge>

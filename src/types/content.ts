@@ -1,11 +1,11 @@
 export interface ContentPost {
-  id: number
+  id: string
   title: string
   content: string
   status: 'draft' | 'scheduled' | 'published' | 'failed' | 'archived'
   scheduledAt: string | null
   publishedAt: string | null
-  pillarId?: number
+  pillarId?: string
   pillarName?: string
   hashtags: string[]
   mentions: string[]
@@ -20,7 +20,7 @@ export interface ContentPost {
 }
 
 export interface ContentPillar {
-  id: number
+  id: string
   name: string
   description?: string
   color: string
@@ -33,8 +33,8 @@ export interface ContentPillar {
 }
 
 export interface ContentCalendarEvent {
-  id: number
-  postId: number
+  id: string
+  postId: string
   title: string
   status: ContentPost['status']
   scheduledAt: string
@@ -45,7 +45,7 @@ export interface ContentCalendarEvent {
 export interface CreatePostData {
   title?: string
   content: string
-  pillarId?: number
+  pillarId?: string
   hashtags?: string[]
   mentions?: string[]
   mediaUrls?: string[]
@@ -54,5 +54,5 @@ export interface CreatePostData {
 }
 
 export interface UpdatePostData extends Partial<CreatePostData> {
-  id: number
+  id: string
 } 

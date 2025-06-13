@@ -1,4 +1,5 @@
-import { pgTable, varchar, text, timestamp, boolean, integer, serial, pgEnum, jsonb } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, text, timestamp, boolean, integer, uuid, pgEnum, jsonb } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { users } from './users'
 
 // Post status enum
@@ -9,7 +10,7 @@ export const postTypeEnum = pgEnum('post_type', ['text', 'image', 'video', 'docu
 
 // Content pillars - thematic categories for organizing content
 export const contentPillars = pgTable('content_pillars', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Pillar details
@@ -33,9 +34,9 @@ export const contentPillars = pgTable('content_pillars', {
 
 // Content posts - LinkedIn posts and articles
 export const contentPosts = pgTable('content_posts', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  pillarId: integer('pillar_id').references(() => contentPillars.id, { onDelete: 'set null' }),
+  pillarId: uuid('pillar_id').references(() => contentPillars.id, { onDelete: 'set null' }),
   
   // Post content
   title: varchar('title', { length: 500 }),
@@ -76,9 +77,9 @@ export const contentPosts = pgTable('content_posts', {
 
 // Content templates - reusable post templates
 export const contentTemplates = pgTable('content_templates', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  pillarId: integer('pillar_id').references(() => contentPillars.id, { onDelete: 'set null' }),
+  pillarId: uuid('pillar_id').references(() => contentPillars.id, { onDelete: 'set null' }),
   
   // Template details
   name: varchar('name', { length: 200 }).notNull(),
@@ -93,7 +94,7 @@ export const contentTemplates = pgTable('content_templates', {
   
   // Default settings for posts created from this template
   defaultHashtags: jsonb('default_hashtags'),
-  defaultPillar: integer('default_pillar_id').references(() => contentPillars.id),
+  defaultPillar: uuid('default_pillar_id').references(() => contentPillars.id),
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -101,9 +102,9 @@ export const contentTemplates = pgTable('content_templates', {
 
 // Content calendar - scheduled content planning
 export const contentCalendar = pgTable('content_calendar', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  postId: integer('post_id').references(() => contentPosts.id, { onDelete: 'cascade' }),
+  postId: uuid('post_id').references(() => contentPosts.id, { onDelete: 'cascade' }),
   
   // Calendar details
   title: varchar('title', { length: 300 }).notNull(),
@@ -115,7 +116,7 @@ export const contentCalendar = pgTable('content_calendar', {
   priority: varchar('priority', { length: 20 }).default('medium'), // low, medium, high
   
   // Content planning
-  pillarId: integer('pillar_id').references(() => contentPillars.id),
+  pillarId: uuid('pillar_id').references(() => contentPillars.id),
   contentIdeas: jsonb('content_ideas'), // Array of content ideas
   notes: text('notes'),
   
@@ -125,7 +126,7 @@ export const contentCalendar = pgTable('content_calendar', {
 
 // Content drafts - work in progress content
 export const contentDrafts = pgTable('content_drafts', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Draft content

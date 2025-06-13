@@ -28,7 +28,7 @@ interface VersionResponse extends Omit<AIContentVersion, 'createdAt'> {
 
 interface VersionListResponse {
   versions: VersionResponse[]
-  sessionId: number
+  sessionId: string
 }
 
 /**
@@ -47,8 +47,8 @@ export const GET = createGetHandler<never, VersionListResponse>(
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 
@@ -89,8 +89,8 @@ export const POST = createPostHandler<{ versions: Omit<CreateContentVersionInput
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 

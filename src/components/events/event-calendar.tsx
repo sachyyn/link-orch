@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react"
 
 interface Event {
@@ -195,7 +194,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
       {/* Legend */}
       <div className="flex items-center gap-4 text-sm">
         <div className="font-medium">Status:</div>
-        {Object.entries(statusColors).map(([status, colorClass]) => (
+        {Object.entries(statusColors).map(([status]) => (
           <div key={status} className="flex items-center gap-1">
             <div className={`w-3 h-3 rounded-full ${
               status === 'published' ? 'bg-green-500' :

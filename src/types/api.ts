@@ -12,13 +12,13 @@ export interface DashboardStats {
 
 // Content Management Types
 export interface Post {
-  id: number
+  id: string
   title: string
   content: string
   status: 'draft' | 'scheduled' | 'published'
   scheduledAt?: string
   publishedAt?: string
-  pillarId?: number
+  pillarId?: string
   pillar?: ContentPillar
   hashtags: string[]
   mentions: string[]
@@ -29,7 +29,7 @@ export interface Post {
 }
 
 export interface ContentPillar {
-  id: number
+  id: string
   name: string
   description?: string
   color: string
@@ -40,7 +40,7 @@ export interface ContentPillar {
 }
 
 export interface BulkPostUpdate {
-  postIds: number[]
+  postIds: string[]
   action: 'delete' | 'update_status' | 'schedule'
   updates?: {
     status?: 'draft' | 'scheduled' | 'published'
@@ -75,8 +75,8 @@ export interface TrendData {
 }
 
 export interface PostAnalytics {
-  id: number
-  postId: number
+  id: string
+  postId: string
   impressions: number
   engagements: number
   engagementRate: number
@@ -89,7 +89,7 @@ export interface PostAnalytics {
 }
 
 export interface AnalyticsReport {
-  id: number
+  id: string
   name: string
   type: 'performance' | 'engagement' | 'growth' | 'content'
   period: string
@@ -100,8 +100,8 @@ export interface AnalyticsReport {
 
 // Engagement Types
 export interface Comment {
-  id: number
-  postId: number
+  id: string
+  postId: string
   postTitle: string
   authorName: string
   authorProfileUrl?: string
@@ -110,14 +110,14 @@ export interface Comment {
   priority: 'low' | 'medium' | 'high'
   sentiment: 'positive' | 'neutral' | 'negative'
   response?: string
-  responseTemplateId?: number
+  responseTemplateId?: string
   createdAt: string
   updatedAt: string
   linkedinUrl?: string
 }
 
 export interface ResponseTemplate {
-  id: number
+  id: string
   title: string
   content: string
   category: 'appreciation' | 'question_answer' | 'follow_up' | 'networking' | 'general'
@@ -127,8 +127,8 @@ export interface ResponseTemplate {
 }
 
 export interface EngagementMetrics {
-  id: number
-  postId?: number
+  id: string
+  postId?: string
   postTitle?: string
   comments: number
   replies: number
@@ -145,7 +145,7 @@ export interface EngagementMetrics {
 
 // Business/Leads Types
 export interface Lead {
-  id: number
+  id: string
   firstName: string
   lastName: string
   name: string // computed field
@@ -168,7 +168,7 @@ export interface Lead {
 }
 
 export interface Event {
-  id: number
+  id: string
   title: string
   description: string
   eventType: 'webinar' | 'workshop' | 'networking' | 'conference' | 'meetup'
@@ -247,14 +247,14 @@ export interface PostCreateRequest {
   content: string
   status?: 'draft' | 'scheduled' | 'published'
   scheduledAt?: string
-  pillarId?: number
+  pillarId?: string
   hashtags?: string[]
   mentions?: string[]
   mediaUrls?: string[]
 }
 
 export interface PostUpdateRequest extends Partial<PostCreateRequest> {
-  id: number
+  id: string
 }
 
 export interface LeadCreateRequest {
@@ -296,7 +296,7 @@ export interface PostFilters {
   page?: number
   limit?: number
   status?: string
-  pillarId?: number
+  pillarId?: string
   search?: string
   startDate?: string
   endDate?: string
@@ -309,7 +309,7 @@ export interface CommentFilters {
   priority?: 'low' | 'medium' | 'high'
   sentiment?: 'positive' | 'neutral' | 'negative'
   search?: string
-  postId?: number
+  postId?: string
 }
 
 export interface LeadFilters {
@@ -344,7 +344,7 @@ export interface EngagementMetricsFilters {
   period?: 'week' | 'month' | 'quarter'
   startDate?: string
   endDate?: string
-  postId?: number
+  postId?: string
 }
 
 export interface TemplateFilters {

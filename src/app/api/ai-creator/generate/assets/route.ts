@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const { sessionId, assetType, prompt, style, dimensions, model } = validation.data;
 
     // Verify session exists and user owns it
-    const session = await getSessionById(userId, parseInt(sessionId));
+    const session = await getSessionById(userId, sessionId);
     if (!session) {
       return NextResponse.json(
         { error: 'Session not found' },
@@ -63,19 +63,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log asset generation start
+    // Log AI usage start
     await createUsageLog({
       userId,
-      projectId: project.id,
-      sessionId: parseInt(sessionId),
-      actionType: 'asset_creation',
-      modelUsed: model,
+      projectId: session.projectId,
+      sessionId: sessionId,
+      actionType: 'image_generation',
+      modelUsed: 'dall-e-3',
       requestPayload: JSON.stringify({
         sessionId,
         assetType,
-        prompt,
         style,
-        dimensions,
+        prompt: prompt,
       }),
     });
 
@@ -84,34 +83,36 @@ export async function POST(request: NextRequest) {
     const mockAssetUrl = await generateMockAsset(assetType, style, dimensions);
     
     // Save asset to database
-    const savedAsset = await createAsset(userId, parseInt(sessionId), {
-      sessionId: parseInt(sessionId),
-      assetType,
-      fileName: `${assetType}_${Date.now()}.png`,
+    const savedAsset = await createAsset(userId, sessionId, {
+      sessionId: sessionId,
+      assetType: assetType as any,
+      fileName: `${sessionId}-${Date.now()}.png`,
       fileUrl: mockAssetUrl,
-      fileSize: 1024000, // Mock file size
-      prompt,
-      model,
+      fileSize: 0, // We'll get this from the actual file
+      prompt: prompt,
+      model: 'dall-e-3',
       style,
-      dimensions,
+      dimensions: '1024x1024',
       generationTime: 0, // We'll track this in future iteration
+      generationCost: '0.04', // DALL-E 3 pricing
       isSelected: false,
     });
 
-    // Log completion
+    // Log successful generation
     await createUsageLog({
       userId,
-      projectId: project.id,
-      sessionId: parseInt(sessionId),
-      actionType: 'asset_creation',
-      modelUsed: model,
+      projectId: session.projectId,
+      sessionId: sessionId,
+      actionType: 'image_generation',
+      modelUsed: 'dall-e-3',
+      tokensUsed: 0, // Images don't use tokens
       processingTime: 0,
       responseSize: mockAssetUrl.length,
       requestPayload: JSON.stringify({
         sessionId,
         assetGenerated: true,
-        assetId: savedAsset.id,
         fileUrl: mockAssetUrl,
+        generationTime: 0,
       }),
     });
 
@@ -188,7 +189,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify session exists and user owns it
-    const session = await getSessionById(userId, parseInt(sessionId));
+    const session = await getSessionById(userId, sessionId);
     if (!session) {
       return NextResponse.json(
         { error: 'Session not found' },

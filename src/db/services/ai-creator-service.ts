@@ -25,7 +25,6 @@ import {
   or, 
   desc, 
   asc, 
-  like, 
   ilike,
   count
 } from '@/db/schema'
@@ -131,7 +130,7 @@ export async function getProjects(userId: string, filters: ProjectFilters = {}):
 /**
  * Get a single project by ID
  */
-export async function getProjectById(userId: string, projectId: number): Promise<AIProject | null> {
+export async function getProjectById(userId: string, projectId: string): Promise<AIProject | null> {
   const [project] = await db
     .select()
     .from(aiProjects)
@@ -167,7 +166,7 @@ export async function createProject(userId: string, projectData: CreateProjectIn
  */
 export async function updateProject(
   userId: string, 
-  projectId: number, 
+  projectId: string, 
   updateData: Partial<CreateProjectInput>
 ): Promise<AIProject | null> {
   const updatedData = {
@@ -190,7 +189,7 @@ export async function updateProject(
 /**
  * Delete a project
  */
-export async function deleteProject(userId: string, projectId: number): Promise<boolean> {
+export async function deleteProject(userId: string, projectId: string): Promise<boolean> {
   const result = await db
     .delete(aiProjects)
     .where(and(
@@ -206,7 +205,7 @@ export async function deleteProject(userId: string, projectId: number): Promise<
 // ================================
 
 export interface SessionFilters {
-  projectId?: number
+  projectId?: string
   status?: string
   search?: string
   startDate?: string
@@ -228,7 +227,7 @@ export interface SessionListResult {
 /**
  * Get sessions for a specific project
  */
-export async function getProjectSessions(userId: string, projectId: number): Promise<AIPostSession[]> {
+export async function getProjectSessions(userId: string, projectId: string): Promise<AIPostSession[]> {
   // Verify user owns the project
   const [project] = await db
     .select({ id: aiProjects.id })
@@ -253,7 +252,7 @@ export async function getProjectSessions(userId: string, projectId: number): Pro
 /**
  * Get a single session by ID
  */
-export async function getSessionById(userId: string, sessionId: number): Promise<AIPostSession | null> {
+export async function getSessionById(userId: string, sessionId: string): Promise<AIPostSession | null> {
   // Get session and verify user ownership through project
   const [session] = await db
     .select({
@@ -322,7 +321,7 @@ export async function createSession(userId: string, sessionData: CreateSessionIn
  */
 export async function updateSession(
   userId: string, 
-  sessionId: number, 
+  sessionId: string, 
   updateData: Partial<CreateSessionInput>
 ): Promise<AIPostSession | null> {
   // Verify user owns the session through project ownership
@@ -346,7 +345,7 @@ export async function updateSession(
 /**
  * Delete a session
  */
-export async function deleteSession(userId: string, sessionId: number): Promise<boolean> {
+export async function deleteSession(userId: string, sessionId: string): Promise<boolean> {
   // Verify user owns the session through project ownership
   const session = await getSessionById(userId, sessionId)
   if (!session) return false
@@ -365,7 +364,7 @@ export async function deleteSession(userId: string, sessionId: number): Promise<
 /**
  * Get content versions for a session
  */
-export async function getSessionContentVersions(userId: string, sessionId: number): Promise<AIContentVersion[]> {
+export async function getSessionContentVersions(userId: string, sessionId: string): Promise<AIContentVersion[]> {
   // Verify user owns the session
   const session = await getSessionById(userId, sessionId)
   if (!session) return []
@@ -384,7 +383,7 @@ export async function getSessionContentVersions(userId: string, sessionId: numbe
  */
 export async function createContentVersions(
   userId: string, 
-  sessionId: number,
+  sessionId: string,
   versionsData: CreateContentVersionInput[]
 ): Promise<AIContentVersion[]> {
   // Verify user owns the session
@@ -411,8 +410,8 @@ export async function createContentVersions(
  */
 export async function selectContentVersion(
   userId: string, 
-  sessionId: number, 
-  versionId: number
+  sessionId: string, 
+  versionId: string
 ): Promise<boolean> {
   // Verify user owns the session
   const session = await getSessionById(userId, sessionId)
@@ -458,7 +457,7 @@ export async function selectContentVersion(
  */
 export async function createAsset(
   userId: string, 
-  sessionId: number, 
+  sessionId: string, 
   assetData: CreateAssetInput
 ): Promise<AIGeneratedAsset> {
   // Verify user owns the session
@@ -483,7 +482,7 @@ export async function createAsset(
 /**
  * Get assets for a session
  */
-export async function getSessionAssets(userId: string, sessionId: number): Promise<AIGeneratedAsset[]> {
+export async function getSessionAssets(userId: string, sessionId: string): Promise<AIGeneratedAsset[]> {
   // Verify user owns the session
   const session = await getSessionById(userId, sessionId)
   if (!session) return []

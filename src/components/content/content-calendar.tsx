@@ -7,10 +7,17 @@ import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns"
 
+interface Post {
+  id: number
+  title: string
+  status: 'draft' | 'scheduled' | 'published' | 'failed' | 'archived'
+  scheduledAt: string | null
+}
+
 interface ContentCalendarProps {
-  posts: any[]
+  posts: Post[]
   searchQuery: string
-  pillars: any[]
+  pillars: unknown[]
 }
 
 const statusColors = {
@@ -21,7 +28,7 @@ const statusColors = {
   archived: 'bg-yellow-100 text-yellow-800',
 }
 
-export function ContentCalendar({ posts, searchQuery, pillars }: ContentCalendarProps) {
+export function ContentCalendar({ posts }: ContentCalendarProps) {
   const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
 
@@ -31,7 +38,7 @@ export function ContentCalendar({ posts, searchQuery, pillars }: ContentCalendar
 
   const getPostsForDay = (day: Date) => {
     if (!Array.isArray(posts)) return []
-    return posts.filter((post: any) => {
+    return posts.filter((post: Post) => {
       if (!post.scheduledAt) return false
       return isSameDay(new Date(post.scheduledAt), day)
     })
@@ -178,7 +185,7 @@ export function ContentCalendar({ posts, searchQuery, pillars }: ContentCalendar
       {/* Calendar Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div>
-          Total posts this month: {Array.isArray(posts) ? posts.filter((post: any) => {
+          Total posts this month: {Array.isArray(posts) ? posts.filter((post: Post) => {
             if (!post.scheduledAt) return false
             const postDate = new Date(post.scheduledAt)
             return isSameMonth(postDate, currentDate)
@@ -186,13 +193,13 @@ export function ContentCalendar({ posts, searchQuery, pillars }: ContentCalendar
         </div>
         <div className="flex items-center gap-4">
           <span>
-            Scheduled: {Array.isArray(posts) ? posts.filter((p: any) => p.status === 'scheduled').length : 0}
+            Scheduled: {Array.isArray(posts) ? posts.filter((p: Post) => p.status === 'scheduled').length : 0}
           </span>
           <span>
-            Published: {Array.isArray(posts) ? posts.filter((p: any) => p.status === 'published').length : 0}
+            Published: {Array.isArray(posts) ? posts.filter((p: Post) => p.status === 'published').length : 0}
           </span>
           <span>
-            Drafts: {Array.isArray(posts) ? posts.filter((p: any) => p.status === 'draft').length : 0}
+            Drafts: {Array.isArray(posts) ? posts.filter((p: Post) => p.status === 'draft').length : 0}
           </span>
         </div>
       </div>

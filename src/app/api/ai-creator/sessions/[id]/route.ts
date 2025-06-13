@@ -44,8 +44,8 @@ export const GET = createGetHandler<never, SessionResponse>(
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 
@@ -86,8 +86,8 @@ export const PUT = createPutHandler<Partial<CreateSessionInput>, SessionResponse
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 
@@ -154,8 +154,8 @@ export const DELETE = createDeleteHandler<DeleteResponse>(
       throw new Error('Session ID is required')
     }
 
-    const sessionId = parseInt(params.id as string)
-    if (isNaN(sessionId)) {
+    const sessionId = params.id as string
+    if (!sessionId.trim()) {
       throw new Error('Invalid session ID')
     }
 

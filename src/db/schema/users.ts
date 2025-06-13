@@ -1,4 +1,5 @@
-import { pgTable, varchar, text, timestamp, boolean, jsonb, serial, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, text, timestamp, boolean, jsonb, uuid, pgEnum } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 // User role enum
 export const userRoleEnum = pgEnum('user_role', ['free', 'pro', 'enterprise', 'admin'])
@@ -21,7 +22,7 @@ export const users = pgTable('users', {
 
 // Extended user profiles with LinkedIn-specific information
 export const userProfiles = pgTable('user_profiles', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Onboarding data
@@ -59,7 +60,7 @@ export const userProfiles = pgTable('user_profiles', {
 
 // User subscription information
 export const userSubscriptions = pgTable('user_subscriptions', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Subscription details

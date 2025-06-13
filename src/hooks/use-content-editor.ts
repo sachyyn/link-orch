@@ -9,7 +9,7 @@ export interface ContentEditorFormData {
   title?: string
   content: string
   status: 'draft' | 'scheduled' | 'published'
-  pillarId?: number
+  pillarId?: string
   hashtags: string[]
   mentions: string[]
   mediaUrls: string[]

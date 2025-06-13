@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { usePosts, usePillars } from '@/hooks/use-api'
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Filter, Search, Calendar, Table2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,7 +15,7 @@ export function ContentManagement() {
   const router = useRouter()
   const [view, setView] = useState<"table" | "calendar">("table")
   const [searchQuery, setSearchQuery] = useState("")
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     status: 'all',
     pillar: 'all',
     dateRange: '30',
@@ -23,7 +23,7 @@ export function ContentManagement() {
 
   // Build API parameters from filters and search
   const apiParams = useMemo(() => {
-    const params: any = {}
+    const params: Record<string, unknown> = {}
     
     if (filters.status !== 'all') {
       params.status = filters.status

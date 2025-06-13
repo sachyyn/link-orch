@@ -5,11 +5,10 @@ import { useParams } from "next/navigation"
 import { useProject, useSessions, useCreateSession } from "@/hooks/use-ai-creator"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Plus, Bot, MessageSquare, Calendar, FileText } from "lucide-react"
+import { ArrowLeft, Plus, Bot, MessageSquare, Calendar } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -50,7 +49,7 @@ export default function ProjectDetailPage() {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<CreateSessionForm>({
     resolver: zodResolver(createSessionSchema)
   })
@@ -80,7 +79,7 @@ export default function ProjectDetailPage() {
       toast.success("Post session created successfully!")
       setCreateSessionOpen(false)
       reset()
-    } catch (error) {
+    } catch {
       toast.error("Failed to create session. Please try again.")
     }
   }
@@ -194,9 +193,9 @@ export default function ProjectDetailPage() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting || createSessionMutation.isPending}
+                  disabled={createSessionMutation.isPending}
                 >
-                  {isSubmitting || createSessionMutation.isPending ? "Creating..." : "Create Session"}
+                  {createSessionMutation.isPending ? "Creating..." : "Create Session"}
                 </Button>
               </div>
             </form>
@@ -204,36 +203,33 @@ export default function ProjectDetailPage() {
         </Dialog>
       </div>
 
-      {/* Project Info */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <FileText className="h-4 w-4" />
-            Content Type
+      {/* Project Info Card */}
+      <div className="border rounded-lg p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Content Tone</p>
+            <p className="font-medium capitalize">{project.tone}</p>
           </div>
-          <p className="font-medium capitalize">{project.contentType}</p>
-        </div>
-        <div className="border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <MessageSquare className="h-4 w-4" />
-            Tone
+          <div>
+            <p className="text-sm text-muted-foreground">Total Sessions</p>
+            <p className="font-medium">{project.totalSessions}</p>
           </div>
-          <p className="font-medium capitalize">{project.tone}</p>
-        </div>
-        <div className="border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Bot className="h-4 w-4" />
-            Sessions
+          <div>
+            <p className="text-sm text-muted-foreground">Total Posts</p>
+            <p className="font-medium">{project.totalPosts}</p>
           </div>
-          <p className="font-medium">{sessions.length}</p>
-        </div>
-        <div className="border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Calendar className="h-4 w-4" />
-            Created
+          <div>
+            <p className="text-sm text-muted-foreground">Created</p>
+            <p className="font-medium">{new Date(project.createdAt).toLocaleDateString()}</p>
           </div>
-          <p className="font-medium">{new Date(project.createdAt).toLocaleDateString()}</p>
         </div>
+        
+        {project.guidelines && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm text-muted-foreground mb-2">Guidelines</p>
+            <p className="text-sm">{project.guidelines}</p>
+          </div>
+        )}
       </div>
 
       {/* Sessions */}
@@ -244,8 +240,8 @@ export default function ProjectDetailPage() {
           <div className="text-center py-12 border-2 border-dashed border-muted-foreground/25 rounded-lg">
             <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No sessions yet</h3>
-            <p className="text-muted-foreground mb-4 max-w-sm mx-auto">
-              Create your first post session to start generating AI-powered LinkedIn content.
+            <p className="text-muted-foreground mb-4">
+              Create your first post session to start generating content with AI.
             </p>
             <Button onClick={() => setCreateSessionOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -253,29 +249,37 @@ export default function ProjectDetailPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sessions.map((session: any) => (
-              <div key={session.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sessions.map((session: { id: string; postIdea: string; status: string; currentStep: string; totalVersions: number; createdAt: string }) => (
+              <div key={session.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="space-y-3">
-                  <div>
-                    <h3 className="font-medium line-clamp-2">{session.postIdea}</h3>
-                    {session.context && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {session.context}
-                      </p>
-                    )}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium line-clamp-2 mb-1">{session.postIdea}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="capitalize">{session.status}</span>
+                        {session.totalVersions > 0 && (
+                          <>
+                            <span>•</span>
+                            <span>{session.totalVersions} versions</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span className="capitalize">{session.status}</span>
-                    <span>{new Date(session.createdAt).toLocaleDateString()}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(session.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <Link href={`/ai-creator/session/${session.id}`}>
+                      <Button size="sm" variant="outline">
+                        Open
+                      </Button>
+                    </Link>
                   </div>
-
-                  <Link href={`/ai-creator/session/${session.id}`}>
-                    <Button className="w-full" variant="outline">
-                      Open Session
-                    </Button>
-                  </Link>
                 </div>
               </div>
             ))}

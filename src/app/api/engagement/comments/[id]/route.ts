@@ -104,17 +104,17 @@ export const GET = createGetHandler<{ id: string }, Comment>(
  * 
  * Updates comment status, priority, or marks as replied
  */
-export const PUT = createPutHandler<any, Comment>(
-  async ({ userId, body }) => {
-    const { id, ...updateData } = body as { id: number } & typeof body
+export const PUT = createPutHandler<z.infer<typeof updateCommentSchema>, Comment>(
+  async ({ userId, body, params }) => {
+    const commentId = parseInt(params.id)
     
-    if (!id || isNaN(Number(id))) {
+    if (isNaN(commentId)) {
       throw new Error('Invalid comment ID')
     }
 
     // Mock comment retrieval and update
     const mockComment: Comment = {
-      id: Number(id),
+      id: commentId,
       postId: 1,
       postTitle: "5 LinkedIn Growth Strategies That Actually Work",
       authorName: "Sarah Johnson",
@@ -131,19 +131,19 @@ export const PUT = createPutHandler<any, Comment>(
     // Apply updates
     const updatedComment: Comment = {
       ...mockComment,
-      ...updateData,
+      ...body,
       updatedAt: new Date().toISOString(),
     }
 
     // If marking as replied, set repliedAt timestamp
-    if (updateData.status === 'replied' && !updatedComment.repliedAt) {
+    if (body.status === 'replied' && !updatedComment.repliedAt) {
       updatedComment.repliedAt = new Date().toISOString()
     }
 
     return updatedComment
   },
   {
-    bodySchema: updateCommentSchema.extend({ id: z.number() }),
+    bodySchema: updateCommentSchema,
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',
@@ -155,11 +155,11 @@ export const PUT = createPutHandler<any, Comment>(
  * 
  * Deletes a comment (marks as ignored in production to maintain audit trail)
  */
-export const DELETE = createDeleteHandler<any>(
-  async ({ userId, body }) => {
-    const { id } = body as { id: number }
+export const DELETE = createDeleteHandler<{ success: boolean; message: string }>(
+  async ({ userId, params }) => {
+    const commentId = parseInt(params.id)
     
-    if (!id || isNaN(Number(id))) {
+    if (isNaN(commentId)) {
       throw new Error('Invalid comment ID')
     }
 
@@ -168,11 +168,10 @@ export const DELETE = createDeleteHandler<any>(
     
     return {
       success: true,
-      message: `Comment ${id} has been deleted`,
+      message: `Comment ${commentId} has been deleted`,
     }
   },
   {
-    bodySchema: z.object({ id: z.number() }),
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',

@@ -135,7 +135,7 @@ export const apiClient = {
       page?: number
       limit?: number
       status?: string
-      pillarId?: number
+      pillarId?: string
       search?: string
       startDate?: string
       endDate?: string
@@ -148,7 +148,7 @@ export const apiClient = {
       content: string
       status?: 'draft' | 'scheduled' | 'published'
       scheduledAt?: string
-      pillarId?: number
+      pillarId?: string
       hashtags?: string[]
       mentions?: string[]
       mediaUrls?: string[]

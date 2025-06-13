@@ -1,6 +1,7 @@
 import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
-import { getPillars, createPillar } from '@/db/services/content-service'
+import { getPillars } from '@/db/services/content-service'
 import { type ContentPillar } from '@/db/schema'
+import { z } from 'zod'
 
 // Types for content pillars
 interface PillarResponse extends Omit<ContentPillar, 'createdAt' | 'updatedAt'> {
@@ -18,12 +19,14 @@ interface PillarListResponse {
   }
 }
 
-interface CreatePillarRequest {
-  name: string
-  description?: string
-  color: string
-  targetPercentage: number
-}
+const createPillarSchema = z.object({
+  name: z.string().min(2).max(50),
+  description: z.string().optional(),
+  color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color must be a valid hex color'),
+  targetPercentage: z.number().min(1).max(100),
+})
+
+type CreatePillarRequest = z.infer<typeof createPillarSchema>
 
 /**
  * GET /api/content/pillars
@@ -77,45 +80,23 @@ export const GET = createGetHandler<never, PillarListResponse>(
  * Creates a new content pillar
  * Validates that total target percentages don't exceed 100%
  */
-export const POST = createPostHandler<any, PillarResponse>(
+export const POST = createPostHandler<CreatePillarRequest, PillarResponse>(
   async ({ userId, body }) => {
-    const { name, description, color, targetPercentage } = body as CreatePillarRequest
-
-    // Validate required fields
-    if (!name || !color || typeof targetPercentage !== 'number') {
-      throw new Error('Name, color, and targetPercentage are required')
-    }
-
-    // Validate name length
-    if (name.length < 2 || name.length > 50) {
-      throw new Error('Pillar name must be between 2 and 50 characters')
-    }
-
-    // Validate color format (hex color)
-    if (!/^#[0-9A-F]{6}$/i.test(color)) {
-      throw new Error('Color must be a valid hex color (e.g., #3B82F6)')
-    }
-
-    // Validate target percentage
-    if (targetPercentage < 1 || targetPercentage > 100) {
-      throw new Error('Target percentage must be between 1 and 100')
-    }
-
-    // Mock validation: Check if total percentages would exceed 100%
-    const existingTotalPercentage = 100 // Mock current total
-    if (existingTotalPercentage + targetPercentage > 100) {
-      throw new Error(`Adding this pillar would exceed 100% allocation. Current total: ${existingTotalPercentage}%`)
-    }
+    const { name, description, color } = body
 
     // Mock pillar creation
     const newPillar: PillarResponse = {
-      id: Math.floor(Math.random() * 10000),
+      id: crypto.randomUUID(),
+      userId: userId,
       name,
       description: description || '',
       color,
-      targetPercentage,
+      icon: '📋',
       postCount: 0,
-      lastPostDate: null,
+      totalEngagement: 0,
+      avgEngagement: 0,
+      isActive: true,
+      sortOrder: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -123,6 +104,7 @@ export const POST = createPostHandler<any, PillarResponse>(
     return newPillar
   },
   {
+    bodySchema: createPillarSchema,
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',

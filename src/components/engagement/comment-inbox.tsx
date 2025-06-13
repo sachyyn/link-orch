@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { 
   Select,
@@ -179,7 +178,7 @@ export function CommentInbox({ comments, templates }: CommentInboxProps) {
                 </div>
                 
                 <div className="text-sm text-gray-600">
-                  on "{comment.postTitle}"
+                  on &ldquo;{comment.postTitle}&rdquo;
                 </div>
               </div>
               

@@ -1,6 +1,6 @@
 import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
 import { contentFilterSchema, contentPostSchema } from '@/lib/validations'
-import { getPosts, createPost, type PostFilters, type PostListResult } from '@/db/services/content-service'
+import { getPosts, createPost, type PostFilters } from '@/db/services/content-service'
 import { type ContentPost } from '@/db/schema'
 
 // Types for our API responses (matching database schema)

@@ -1,6 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { queryKeys } from '@/lib/react-query'
+
+// ================================
+// Type Definitions
+// ================================
+
+interface GenerateContentParams {
+  sessionId: string
+  postIdea: string
+  tone?: string
+  contentType?: string
+  guidelines?: string
+  variations: number
+}
+
+interface GenerateAssetParams {
+  sessionId: string
+  assetType: string
+  prompt: string
+  style?: string
+  dimensions?: string
+}
 
 // ================================
 // AI Creator Query Keys
@@ -10,7 +30,7 @@ export const aiCreatorQueryKeys = {
   all: () => ['ai-creator'] as const,
   projects: {
     all: () => ['ai-creator', 'projects'] as const,
-    list: (filters?: any) => ['ai-creator', 'projects', 'list', filters] as const,
+    list: (filters?: Record<string, unknown>) => ['ai-creator', 'projects', 'list', filters] as const,
     detail: (id: string | number) => ['ai-creator', 'projects', 'detail', id] as const,
   },
   sessions: {
@@ -42,7 +62,7 @@ export const aiCreatorQueryKeys = {
 // Project Hooks
 // ================================
 
-export function useProjects(params?: any) {
+export function useProjects(params?: Record<string, unknown>) {
   return useQuery({
     queryKey: aiCreatorQueryKeys.projects.list(params),
     queryFn: () => apiClient.aiCreator.getProjects(params),
@@ -73,7 +93,7 @@ export function useUpdateProject() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string | number; data: Record<string, unknown> }) =>
       apiClient.aiCreator.updateProject(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: aiCreatorQueryKeys.projects.detail(variables.id) })
@@ -120,7 +140,7 @@ export function useCreateSession() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string | number; data: any }) =>
+    mutationFn: ({ projectId, data }: { projectId: string | number; data: Record<string, unknown> }) =>
       apiClient.aiCreator.createSession(projectId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: aiCreatorQueryKeys.sessions.byProject(variables.projectId) })
@@ -132,7 +152,7 @@ export function useUpdateSession() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string | number; data: Record<string, unknown> }) =>
       apiClient.aiCreator.updateSession(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: aiCreatorQueryKeys.sessions.detail(variables.id) })
@@ -148,8 +168,8 @@ export function useGenerateContent() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: apiClient.aiCreator.generateContent,
-    onSuccess: (data, variables: any) => {
+    mutationFn: (params: GenerateContentParams) => apiClient.aiCreator.generateContent(params),
+    onSuccess: (data, variables) => {
       // Invalidate versions for the session
       queryClient.invalidateQueries({ 
         queryKey: aiCreatorQueryKeys.versions.bySession(variables.sessionId) 
@@ -168,8 +188,8 @@ export function useGenerateAssets() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: apiClient.aiCreator.generateAssets,
-    onSuccess: (data, variables: any) => {
+    mutationFn: (params: GenerateAssetParams) => apiClient.aiCreator.generateAssets(params),
+    onSuccess: (data, variables) => {
       // Invalidate assets for the session
       queryClient.invalidateQueries({ 
         queryKey: aiCreatorQueryKeys.assets.bySession(variables.sessionId) 
@@ -199,7 +219,7 @@ export function useSelectVersion() {
   
   return useMutation({
     mutationFn: apiClient.aiCreator.selectVersion,
-    onSuccess: (_, versionId) => {
+    onSuccess: () => {
       // Invalidate all version-related queries
       queryClient.invalidateQueries({ queryKey: aiCreatorQueryKeys.versions.all() })
     },
@@ -222,7 +242,7 @@ export function useAssets(sessionId: string | number) {
 // Usage Analytics Hooks
 // ================================
 
-export function useUsageAnalytics(params?: any) {
+export function useUsageAnalytics(params?: { userId?: string } & Record<string, unknown>) {
   return useQuery({
     queryKey: aiCreatorQueryKeys.usage.byUser(params?.userId),
     queryFn: () => apiClient.aiCreator.getUsage(params),

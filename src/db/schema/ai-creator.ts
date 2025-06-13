@@ -1,4 +1,5 @@
-import { pgTable, varchar, text, timestamp, boolean, serial, integer, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, text, timestamp, boolean, uuid, integer, pgEnum } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { users } from './users'
 
 // ================================
@@ -67,7 +68,7 @@ export const assetTypeEnum = pgEnum('asset_type', [
  * Each project represents a content strategy with specific guidelines
  */
 export const aiProjects = pgTable('ai_projects', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Project identity
@@ -103,8 +104,8 @@ export const aiProjects = pgTable('ai_projects', {
  * Each session represents one post ideation and generation cycle
  */
 export const aiPostSessions = pgTable('ai_post_sessions', {
-  id: serial('id').primaryKey(),
-  projectId: integer('project_id').notNull().references(() => aiProjects.id, { onDelete: 'cascade' }),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
+  projectId: uuid('project_id').notNull().references(() => aiProjects.id, { onDelete: 'cascade' }),
   
   // Session content
   postIdea: text('post_idea').notNull(), // User's initial post idea
@@ -121,7 +122,7 @@ export const aiPostSessions = pgTable('ai_post_sessions', {
   
   // Generation results
   totalVersions: integer('total_versions').default(0).notNull(),
-  selectedVersionId: integer('selected_version_id'), // Reference to chosen content version
+  selectedVersionId: uuid('selected_version_id'), // Reference to chosen content version
   
   // Asset generation
   needsAsset: boolean('needs_asset').default(false),
@@ -141,8 +142,8 @@ export const aiPostSessions = pgTable('ai_post_sessions', {
  * Stores different AI-generated content variations for user selection
  */
 export const aiContentVersions = pgTable('ai_content_versions', {
-  id: serial('id').primaryKey(),
-  sessionId: integer('session_id').notNull().references(() => aiPostSessions.id, { onDelete: 'cascade' }),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
+  sessionId: uuid('session_id').notNull().references(() => aiPostSessions.id, { onDelete: 'cascade' }),
   
   // Version tracking
   versionNumber: integer('version_number').notNull(), // 1, 2, 3, etc.
@@ -178,8 +179,8 @@ export const aiContentVersions = pgTable('ai_content_versions', {
  * Stores generated visual assets linked to post sessions
  */
 export const aiGeneratedAssets = pgTable('ai_generated_assets', {
-  id: serial('id').primaryKey(),
-  sessionId: integer('session_id').notNull().references(() => aiPostSessions.id, { onDelete: 'cascade' }),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
+  sessionId: uuid('session_id').notNull().references(() => aiPostSessions.id, { onDelete: 'cascade' }),
   
   // Asset details
   assetType: assetTypeEnum('asset_type').notNull(),
@@ -207,14 +208,16 @@ export const aiGeneratedAssets = pgTable('ai_generated_assets', {
 })
 
 /**
- * AI Usage Logs - Comprehensive tracking of all AI operations
- * For analytics, billing, and usage optimization
+ * AI Usage Logs - Track AI API usage and costs
+ * Comprehensive logging for analytics and billing
  */
 export const aiUsageLogs = pgTable('ai_usage_logs', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  projectId: integer('project_id').references(() => aiProjects.id, { onDelete: 'set null' }),
-  sessionId: integer('session_id').references(() => aiPostSessions.id, { onDelete: 'set null' }),
+  
+  // Optional associations
+  projectId: uuid('project_id').references(() => aiProjects.id, { onDelete: 'set null' }),
+  sessionId: uuid('session_id').references(() => aiPostSessions.id, { onDelete: 'set null' }),
   
   // Action details
   actionType: aiActionTypeEnum('action_type').notNull(),
@@ -222,19 +225,19 @@ export const aiUsageLogs = pgTable('ai_usage_logs', {
   
   // Usage metrics
   tokensUsed: integer('tokens_used'),
-  processingTime: integer('processing_time'), // In milliseconds
-  apiCost: varchar('api_cost', { length: 20 }), // Cost in currency
+  processingTime: integer('processing_time'), // Time in milliseconds
+  apiCost: varchar('api_cost', { length: 20 }), // Cost tracking
   
-  // Request details
-  requestPayload: text('request_payload'), // JSON of request parameters
-  responseSize: integer('response_size'), // Response size in characters/bytes
+  // Request/Response data
+  requestPayload: text('request_payload'), // Store request for debugging
+  responseSize: integer('response_size'), // Response size in bytes
   
-  // Success/failure tracking
+  // Status tracking
   isSuccessful: boolean('is_successful').default(true),
-  errorMessage: text('error_message'), // If action failed
+  errorMessage: text('error_message'),
   retryCount: integer('retry_count').default(0),
   
-  // Context
+  // Context metadata
   userAgent: varchar('user_agent', { length: 500 }),
   ipAddress: varchar('ip_address', { length: 45 }),
   
@@ -243,44 +246,36 @@ export const aiUsageLogs = pgTable('ai_usage_logs', {
 })
 
 // ================================
-// TypeScript Types Export
+// Type Exports
 // ================================
 
-// AI Projects types
+// Core table types
 export type AIProject = typeof aiProjects.$inferSelect
 export type NewAIProject = typeof aiProjects.$inferInsert
 
-// AI Post Sessions types  
 export type AIPostSession = typeof aiPostSessions.$inferSelect
 export type NewAIPostSession = typeof aiPostSessions.$inferInsert
 
-// AI Content Versions types
 export type AIContentVersion = typeof aiContentVersions.$inferSelect
 export type NewAIContentVersion = typeof aiContentVersions.$inferInsert
 
-// AI Generated Assets types
 export type AIGeneratedAsset = typeof aiGeneratedAssets.$inferSelect
 export type NewAIGeneratedAsset = typeof aiGeneratedAssets.$inferInsert
 
-// AI Usage Logs types
 export type AIUsageLog = typeof aiUsageLogs.$inferSelect
 export type NewAIUsageLog = typeof aiUsageLogs.$inferInsert
 
 // ================================
-// Helper Types for Application Logic
+// Input Types for API/Service Layer
 // ================================
 
-// Project creation input type
+// Simplified input types that exclude auto-generated fields
 export type CreateProjectInput = Omit<NewAIProject, 'id' | 'userId' | 'totalSessions' | 'totalPosts' | 'createdAt' | 'updatedAt'>
 
-// Session creation input type  
 export type CreateSessionInput = Omit<NewAIPostSession, 'id' | 'totalVersions' | 'createdAt' | 'updatedAt'>
 
-// Content version creation input type
 export type CreateContentVersionInput = Omit<NewAIContentVersion, 'id' | 'createdAt'>
 
-// Asset creation input type
 export type CreateAssetInput = Omit<NewAIGeneratedAsset, 'id' | 'downloadCount' | 'createdAt'>
 
-// Usage log creation input type
 export type CreateUsageLogInput = Omit<NewAIUsageLog, 'id' | 'retryCount' | 'createdAt'> 

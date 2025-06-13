@@ -2,9 +2,6 @@ import { db } from '@/db'
 import { 
   contentPosts, 
   contentPillars, 
-  contentTemplates,
-  contentCalendar,
-  contentDrafts,
   type ContentPost,
   type NewContentPost,
   type ContentPillar,
@@ -14,7 +11,6 @@ import {
   or, 
   desc, 
   asc, 
-  like, 
   ilike,
   count
 } from '@/db/schema'
@@ -26,7 +22,7 @@ import { gte, lte } from 'drizzle-orm'
 
 export interface PostFilters {
   status?: 'draft' | 'scheduled' | 'published' | 'failed' | 'archived'
-  pillarId?: number
+  pillarId?: string
   search?: string
   startDate?: string
   endDate?: string
@@ -146,7 +142,7 @@ export async function getPosts(userId: string, filters: PostFilters = {}): Promi
 /**
  * Get a single post by ID
  */
-export async function getPostById(userId: string, postId: number): Promise<ContentPost | null> {
+export async function getPostById(userId: string, postId: string): Promise<ContentPost | null> {
   const [post] = await db
     .select({
       id: contentPosts.id,
@@ -210,7 +206,7 @@ export async function createPost(userId: string, postData: Omit<NewContentPost, 
  */
 export async function updatePost(
   userId: string, 
-  postId: number, 
+  postId: string, 
   updateData: Partial<Omit<NewContentPost, 'userId'>>
 ): Promise<ContentPost | null> {
   const updatedData = {
@@ -234,7 +230,7 @@ export async function updatePost(
 /**
  * Delete a post
  */
-export async function deletePost(userId: string, postId: number): Promise<boolean> {
+export async function deletePost(userId: string, postId: string): Promise<boolean> {
   const result = await db
     .delete(contentPosts)
     .where(and(
@@ -250,7 +246,7 @@ export async function deletePost(userId: string, postId: number): Promise<boolea
  */
 export async function bulkUpdatePosts(
   userId: string,
-  postIds: number[],
+  postIds: string[],
   updateData: Partial<Omit<NewContentPost, 'userId'>>
 ): Promise<{ success: number; failed: number }> {
   let success = 0
@@ -264,7 +260,7 @@ export async function bulkUpdatePosts(
       } else {
         failed++
       }
-    } catch (error) {
+    } catch {
       failed++
     }
   }
@@ -275,7 +271,7 @@ export async function bulkUpdatePosts(
 /**
  * Bulk delete posts
  */
-export async function bulkDeletePosts(userId: string, postIds: number[]): Promise<{ success: number; failed: number }> {
+export async function bulkDeletePosts(userId: string, postIds: string[]): Promise<{ success: number; failed: number }> {
   let success = 0
   let failed = 0
 
@@ -287,7 +283,7 @@ export async function bulkDeletePosts(userId: string, postIds: number[]): Promis
       } else {
         failed++
       }
-    } catch (error) {
+    } catch {
       failed++
     }
   }
@@ -315,7 +311,7 @@ export async function getPillars(userId: string): Promise<ContentPillar[]> {
 /**
  * Get a single pillar by ID
  */
-export async function getPillarById(userId: string, pillarId: number): Promise<ContentPillar | null> {
+export async function getPillarById(userId: string, pillarId: string): Promise<ContentPillar | null> {
   const [pillar] = await db
     .select()
     .from(contentPillars)
@@ -351,7 +347,7 @@ export async function createPillar(userId: string, pillarData: Omit<NewContentPi
  */
 export async function updatePillar(
   userId: string, 
-  pillarId: number, 
+  pillarId: string, 
   updateData: Partial<Omit<NewContentPillar, 'userId'>>
 ): Promise<ContentPillar | null> {
   const updatedData = {
@@ -374,7 +370,7 @@ export async function updatePillar(
 /**
  * Delete a pillar
  */
-export async function deletePillar(userId: string, pillarId: number): Promise<boolean> {
+export async function deletePillar(userId: string, pillarId: string): Promise<boolean> {
   const result = await db
     .delete(contentPillars)
     .where(and(

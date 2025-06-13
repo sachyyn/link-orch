@@ -1,7 +1,6 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { 
@@ -20,14 +19,10 @@ import {
 } from 'recharts'
 import { 
   TrendingUp,
-  TrendingDown,
   MessageSquare,
   Reply,
   Clock,
-  Heart,
-  ExternalLink,
   Target,
-  Users,
   Zap
 } from "lucide-react"
 
@@ -71,8 +66,6 @@ const engagementTrendData = [
   { date: '2024-02-15', comments: 22, replies: 18 },
   { date: '2024-02-16', comments: 16, replies: 13 },
 ]
-
-const sentimentColors = ['#22c55e', '#6b7280', '#ef4444'] // green, gray, red
 
 export function EngagementTracking({ metrics }: EngagementTrackingProps) {
   if (!metrics || metrics.length === 0) {

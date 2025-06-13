@@ -10,13 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Plus, Bot, Calendar, FileText, TrendingUp } from "lucide-react"
+import { Plus, Bot } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { toast } from "sonner"
 import Link from "next/link"
-import { createProjectFormSchema, transformFormToApi, type CreateProjectFormInput } from "@/lib/schemas"
+import { createProjectFormSchema, transformFormToApi, type CreateProjectFormInput, CONTENT_TONES, FRONTEND_CONTENT_TYPES } from "@/lib/schemas"
 
 type CreateProjectForm = CreateProjectFormInput
 
@@ -26,9 +25,7 @@ export default function AICreatorPage() {
   // Fetch projects using React Query
   const { 
     data: projectsData, 
-    isLoading, 
-    error, 
-    refetch 
+    isLoading
   } = useProjects()
   
   // Create project mutation
@@ -41,7 +38,7 @@ export default function AICreatorPage() {
     setValue,
     watch,
     reset,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectFormSchema),
     defaultValues: {
@@ -61,7 +58,7 @@ export default function AICreatorPage() {
       toast.success("Project created successfully!")
       setCreateDialogOpen(false)
       reset()
-    } catch (error) {
+    } catch {
       toast.error("Failed to create project. Please try again.")
     }
   }
@@ -95,22 +92,6 @@ export default function AICreatorPage() {
             </Card>
           ))}
         </div>
-      </div>
-    )
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Failed to load projects</h3>
-        <p className="text-muted-foreground mb-4">
-          There was an error loading your AI Creator projects.
-        </p>
-        <Button onClick={() => refetch()} variant="outline">
-          Try Again
-        </Button>
       </div>
     )
   }
@@ -168,7 +149,7 @@ export default function AICreatorPage() {
                   <Label htmlFor="tone">Default Tone</Label>
                   <Select
                     value={watch("tone")}
-                    onValueChange={(value) => setValue("tone", value as any)}
+                    onValueChange={(value) => setValue("tone", value as typeof CONTENT_TONES[number])}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -190,7 +171,7 @@ export default function AICreatorPage() {
                   <Label htmlFor="contentType">Content Type</Label>
                   <Select
                     value={watch("contentType")}
-                    onValueChange={(value) => setValue("contentType", value as any)}
+                    onValueChange={(value) => setValue("contentType", value as typeof FRONTEND_CONTENT_TYPES[number])}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -209,8 +190,9 @@ export default function AICreatorPage() {
                 <Label htmlFor="guidelines">Brand Guidelines</Label>
                 <Textarea
                   id="guidelines"
-                  placeholder="Enter your brand voice, key messages, or content guidelines..."
+                  placeholder="Describe your brand voice, style preferences, key messages..."
                   {...register("guidelines")}
+                  rows={3}
                 />
                 {errors.guidelines && (
                   <p className="text-sm text-destructive">{errors.guidelines.message}</p>
@@ -227,9 +209,9 @@ export default function AICreatorPage() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting || createProjectMutation.isPending}
+                  disabled={createProjectMutation.isPending}
                 >
-                  {isSubmitting || createProjectMutation.isPending ? "Creating..." : "Create Project"}
+                  {createProjectMutation.isPending ? "Creating..." : "Create Project"}
                 </Button>
               </div>
             </form>
@@ -240,52 +222,43 @@ export default function AICreatorPage() {
       {/* Projects Grid */}
       {projects.length === 0 ? (
         // Empty state
-        <div className="text-center py-12 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+        <div className="text-center py-12">
           <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
-          <p className="text-muted-foreground mb-4 max-w-sm mx-auto">
-            Create your first AI Creator project to start generating LinkedIn content with AI assistance.
+          <p className="text-muted-foreground mb-4">
+            Create your first AI project to start generating LinkedIn content.
           </p>
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Your First Project
+            Create Project
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project: any) => (
+          {projects.map((project: { id: string; name: string; description?: string; tone: string; totalSessions: number; totalPosts: number; createdAt: string }) => (
             <Card key={project.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="truncate">{project.name}</span>
-                  <Bot className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                </CardTitle>
-                {project.description && (
-                  <CardDescription className="line-clamp-2">
-                    {project.description}
-                  </CardDescription>
-                )}
+                <CardTitle className="text-lg">{project.name}</CardTitle>
+                <CardDescription>
+                  {project.description || "No description provided"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-4 w-4" />
-                      <span className="capitalize">{project.contentType}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-4 w-4" />
-                      <span className="capitalize">{project.tone}</span>
-                    </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Tone:</span>
+                    <span className="capitalize">{project.tone}</span>
                   </div>
-                  
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Created {new Date(project.createdAt).toLocaleDateString()}</span>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Sessions:</span>
+                    <span>{project.totalSessions}</span>
                   </div>
-
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Posts:</span>
+                    <span>{project.totalPosts}</span>
+                  </div>
                   <Link href={`/ai-creator/project/${project.id}`}>
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full">
                       Open Project
                     </Button>
                   </Link>

@@ -15,6 +15,13 @@
       "when": 1749831312915,
       "tag": "0001_premium_night_nurse",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749837222805,
+      "tag": "0002_sudden_arclight",
+      "breakpoints": true
     }
   ]
 }

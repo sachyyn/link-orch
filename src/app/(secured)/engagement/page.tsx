@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { DashboardHeader } from "@/components/layouts/dashboard-header"
 import { EngagementManagement } from "@/components/engagement/engagement-management"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, Filter, Download, Plus } from "lucide-react"
+import { Filter, Download, Plus } from "lucide-react"
 
 export default async function EngagementPage() {
   const { userId } = await auth()

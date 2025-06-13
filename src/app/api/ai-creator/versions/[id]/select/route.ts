@@ -4,14 +4,14 @@ import { z } from 'zod'
 
 // Validation schema
 const selectVersionSchema = z.object({
-  sessionId: z.number().min(1),
+  sessionId: z.string().min(1),
 })
 
 interface SelectVersionResponse {
   success: boolean
   message: string
-  versionId: number
-  sessionId: number
+  versionId: string
+  sessionId: string
 }
 
 /**
@@ -20,7 +20,7 @@ interface SelectVersionResponse {
  * Selects a specific content version as the chosen one for a session
  * Body schema: selectVersionSchema
  */
-export const POST = createPostHandler<{ sessionId: number }, SelectVersionResponse>(
+export const POST = createPostHandler<{ sessionId: string }, SelectVersionResponse>(
   async ({ userId, params, body }) => {
     if (!userId) {
       throw new Error('User ID is required')
@@ -30,8 +30,8 @@ export const POST = createPostHandler<{ sessionId: number }, SelectVersionRespon
       throw new Error('Version ID is required')
     }
 
-    const versionId = parseInt(params.id as string)
-    if (isNaN(versionId)) {
+    const versionId = params.id as string
+    if (!versionId.trim()) {
       throw new Error('Invalid version ID')
     }
 

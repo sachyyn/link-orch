@@ -1,32 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/react-query'
-import type {
-  DashboardStats,
-  Post,
-  ContentPillar,
-  AnalyticsOverview,
-  Comment,
-  ResponseTemplate,
-  EngagementMetrics,
-  Lead,
-  Event,
-  OnboardingStatus,
-  PostFilters,
-  CommentFilters,
-  LeadFilters,
-  EventFilters,
-  AnalyticsFilters,
-  EngagementMetricsFilters,
-  TemplateFilters,
-  PostCreateRequest,
-  PostUpdateRequest,
-  LeadCreateRequest,
-  EventCreateRequest,
-  CommentUpdateRequest,
-  APIResponse,
-  PaginatedResponse
-} from '@/types/api'
 
 // ================================
 // Dashboard Hooks
@@ -47,7 +21,7 @@ export function usePosts(params?: {
   page?: number
   limit?: number
   status?: string
-  pillarId?: number
+  pillarId?: string
   search?: string
   startDate?: string
   endDate?: string

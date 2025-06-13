@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server"
 import { auth } from '@clerk/nextjs/server';
 import { createProject, createSession } from '@/db/services/ai-creator-service';
 
@@ -6,7 +6,7 @@ import { createProject, createSession } from '@/db/services/ai-creator-service';
  * Test endpoint to verify AI generation functionality
  * Creates a test project and session, then provides URLs to test both APIs
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 /**
  * Get test status and cleanup
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const { userId } = await auth();
     if (!userId) {

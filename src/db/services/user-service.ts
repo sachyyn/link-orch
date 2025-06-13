@@ -1,12 +1,9 @@
 import { db } from '@/db'
 import { 
-  users, 
   userProfiles, 
-  userSubscriptions,
   type UserProfile,
   type NewUserProfile,
-  eq, 
-  and
+  eq
 } from '@/db/schema'
 
 // ================================

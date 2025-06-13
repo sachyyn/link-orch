@@ -1,24 +1,32 @@
 import { createPostHandler } from '@/lib/api-wrapper'
+import { z } from 'zod'
+
+// Validation schemas
+const bulkDeleteSchema = z.object({
+  operation: z.literal('delete'),
+  postIds: z.array(z.string().uuid()),
+})
+
+const bulkStatusUpdateSchema = z.object({
+  operation: z.literal('status_update'),
+  postIds: z.array(z.string().uuid()),
+  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']),
+})
+
+const bulkScheduleSchema = z.object({
+  operation: z.literal('schedule'),
+  postIds: z.array(z.string().uuid()),
+  scheduledAt: z.string().datetime(),
+})
+
+const bulkOperationSchema = z.discriminatedUnion('operation', [
+  bulkDeleteSchema,
+  bulkStatusUpdateSchema,
+  bulkScheduleSchema,
+])
 
 // Types for bulk operations
-interface BulkDeleteRequest {
-  operation: 'delete'
-  postIds: number[]
-}
-
-interface BulkStatusUpdateRequest {
-  operation: 'status_update'
-  postIds: number[]
-  status: 'draft' | 'scheduled' | 'published' | 'failed' | 'archived'
-}
-
-interface BulkScheduleRequest {
-  operation: 'schedule'
-  postIds: number[]
-  scheduledAt: string
-}
-
-type BulkOperationRequest = BulkDeleteRequest | BulkStatusUpdateRequest | BulkScheduleRequest
+type BulkOperationRequest = z.infer<typeof bulkOperationSchema>
 
 interface BulkOperationResponse {
   success: boolean
@@ -26,7 +34,7 @@ interface BulkOperationResponse {
   processed: number
   failed: number
   results: Array<{
-    postId: number
+    postId: string
     success: boolean
     error?: string
   }>
@@ -42,49 +50,27 @@ interface BulkOperationResponse {
  * - Bulk scheduling
  * 
  * Request body examples:
- * Delete: { "operation": "delete", "postIds": [1, 2, 3] }
- * Status: { "operation": "status_update", "postIds": [1, 2], "status": "published" }
- * Schedule: { "operation": "schedule", "postIds": [1, 2], "scheduledAt": "2024-02-01T10:00:00Z" }
+ * Delete: { "operation": "delete", "postIds": ["uuid1", "uuid2", "uuid3"] }
+ * Status: { "operation": "status_update", "postIds": ["uuid1", "uuid2"], "status": "published" }
+ * Schedule: { "operation": "schedule", "postIds": ["uuid1", "uuid2"], "scheduledAt": "2024-02-01T10:00:00Z" }
  */
-export const POST = createPostHandler<any, BulkOperationResponse>(
+export const POST = createPostHandler<BulkOperationRequest, BulkOperationResponse>(
   async ({ userId, body }) => {
-    const { operation, postIds } = body as BulkOperationRequest
-
-    if (!operation || !postIds || !Array.isArray(postIds)) {
-      throw new Error('Operation and postIds array are required')
-    }
-
-    if (postIds.length === 0) {
-      throw new Error('At least one post ID is required')
-    }
+    const { operation, postIds } = body
 
     if (postIds.length > 100) {
       throw new Error('Maximum 100 posts can be processed at once')
     }
 
-    // Validate all post IDs are numbers
-    const invalidIds = postIds.filter(id => typeof id !== 'number' || isNaN(id))
-    if (invalidIds.length > 0) {
-      throw new Error(`Invalid post IDs: ${invalidIds.join(', ')}`)
-    }
-
     let processed = 0
     let failed = 0
-    const results: Array<{ postId: number; success: boolean; error?: string }> = []
+    const results: Array<{ postId: string; success: boolean; error?: string }> = []
 
     switch (operation) {
       case 'delete':
         // Process bulk delete
         for (const postId of postIds) {
           try {
-            // Simulate business rules
-            if (postId > 1000) {
-              throw new Error('Post not found')
-            }
-            if (postId === 1) {
-              throw new Error('Cannot delete published posts')
-            }
-            
             // Mock successful deletion
             results.push({ postId, success: true })
             processed++
@@ -100,22 +86,9 @@ export const POST = createPostHandler<any, BulkOperationResponse>(
         break
 
       case 'status_update':
-        const { status } = body as BulkStatusUpdateRequest
-        if (!status) {
-          throw new Error('Status is required for status_update operation')
-        }
-
         // Process bulk status update
         for (const postId of postIds) {
           try {
-            // Simulate business rules
-            if (postId > 1000) {
-              throw new Error('Post not found')
-            }
-            if (status === 'published' && postId === 3) {
-              throw new Error('Post content is incomplete')
-            }
-            
             // Mock successful status update
             results.push({ postId, success: true })
             processed++
@@ -131,28 +104,9 @@ export const POST = createPostHandler<any, BulkOperationResponse>(
         break
 
       case 'schedule':
-        const { scheduledAt } = body as BulkScheduleRequest
-        if (!scheduledAt) {
-          throw new Error('ScheduledAt is required for schedule operation')
-        }
-
-        // Validate scheduled date is in the future
-        const scheduledDate = new Date(scheduledAt)
-        if (scheduledDate <= new Date()) {
-          throw new Error('Scheduled date must be in the future')
-        }
-
         // Process bulk scheduling
         for (const postId of postIds) {
           try {
-            // Simulate business rules
-            if (postId > 1000) {
-              throw new Error('Post not found')
-            }
-            if (postId === 1) {
-              throw new Error('Cannot reschedule published posts')
-            }
-            
             // Mock successful scheduling
             results.push({ postId, success: true })
             processed++
@@ -166,9 +120,6 @@ export const POST = createPostHandler<any, BulkOperationResponse>(
           }
         }
         break
-
-      default:
-        throw new Error(`Unsupported operation: ${operation}`)
     }
 
     return {
@@ -180,6 +131,7 @@ export const POST = createPostHandler<any, BulkOperationResponse>(
     }
   },
   {
+    bodySchema: bulkOperationSchema,
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',

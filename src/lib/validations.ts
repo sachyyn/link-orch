@@ -34,7 +34,7 @@ export const contentPostSchema = z.object({
   content: z.string().min(1),
   status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']).default('draft'),
   scheduledAt: z.string().datetime().optional(),
-  pillarId: z.number().optional(),
+  pillarId: z.string().uuid().optional(),
   hashtags: z.array(z.string()).max(30).optional(),
   mentions: z.array(z.string()).max(10).optional(),
   mediaUrls: z.array(z.string().url()).max(10).optional(),
@@ -46,7 +46,7 @@ export const contentTemplateSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().min(1),
   category: z.string().max(50).optional(),
-  pillarId: z.number().optional(),
+  pillarId: z.string().uuid().optional(),
   isPublic: z.boolean().default(false),
 })
 
@@ -57,7 +57,7 @@ export const updateContentTemplateSchema = contentTemplateSchema.partial()
 // ================================
 
 export const postAnalyticsSchema = z.object({
-  postId: z.number(),
+  postId: z.string().uuid(),
   impressions: z.number().min(0).default(0),
   likes: z.number().min(0).default(0),
   comments: z.number().min(0).default(0),
@@ -147,7 +147,7 @@ export const dateRangeSchema = z.object({
 
 export const contentFilterSchema = z.object({
   status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']).optional(),
-  pillarId: z.coerce.number().optional(),
+  pillarId: z.string().uuid().optional(),
   search: z.string().max(100).optional(),
 }).merge(paginationSchema).merge(dateRangeSchema)
 

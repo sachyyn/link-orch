@@ -1,12 +1,13 @@
-import { pgTable, varchar, text, timestamp, integer, serial, jsonb, date, decimal } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, text, timestamp, integer, uuid, jsonb, date, decimal } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { users } from './users'
 import { contentPosts, contentPillars } from './content'
 
 // Post analytics - detailed metrics for each LinkedIn post
 export const postAnalytics = pgTable('post_analytics', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  postId: integer('post_id').notNull().references(() => contentPosts.id, { onDelete: 'cascade' }),
+  postId: uuid('post_id').notNull().references(() => contentPosts.id, { onDelete: 'cascade' }),
   
   // LinkedIn metrics
   linkedinPostId: varchar('linkedin_post_id', { length: 100 }),
@@ -46,9 +47,9 @@ export const postAnalytics = pgTable('post_analytics', {
 
 // Engagement metrics - detailed engagement tracking
 export const engagementMetrics = pgTable('engagement_metrics', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  postId: integer('post_id').references(() => contentPosts.id, { onDelete: 'cascade' }),
+  postId: uuid('post_id').references(() => contentPosts.id, { onDelete: 'cascade' }),
   
   // Interaction details
   interactionType: varchar('interaction_type', { length: 50 }).notNull(), // like, comment, share, click
@@ -68,7 +69,7 @@ export const engagementMetrics = pgTable('engagement_metrics', {
 
 // Performance snapshots - daily/weekly/monthly performance summaries
 export const performanceSnapshots = pgTable('performance_snapshots', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Snapshot details
@@ -87,8 +88,8 @@ export const performanceSnapshots = pgTable('performance_snapshots', {
   profileViews: integer('profile_views').default(0),
   
   // Content performance
-  topPerformingPost: integer('top_performing_post').references(() => contentPosts.id),
-  topPerformingPillar: integer('top_performing_pillar').references(() => contentPillars.id),
+  topPerformingPost: uuid('top_performing_post').references(() => contentPosts.id),
+  topPerformingPillar: uuid('top_performing_pillar').references(() => contentPillars.id),
   
   // Pillar breakdown
   pillarMetrics: jsonb('pillar_metrics'), // Array of {pillarId, posts, engagement}
@@ -108,7 +109,7 @@ export const performanceSnapshots = pgTable('performance_snapshots', {
 
 // User activity - track user actions within the platform
 export const userActivity = pgTable('user_activity', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Activity details
@@ -122,15 +123,15 @@ export const userActivity = pgTable('user_activity', {
   referrer: varchar('referrer', { length: 500 }),
   
   // Related entities
-  relatedPostId: integer('related_post_id').references(() => contentPosts.id),
-  relatedPillarId: integer('related_pillar_id').references(() => contentPillars.id),
+  relatedPostId: uuid('related_post_id').references(() => contentPosts.id),
+  relatedPillarId: uuid('related_pillar_id').references(() => contentPillars.id),
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 // Analytics goals - user-defined performance goals
 export const analyticsGoals = pgTable('analytics_goals', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Goal details
@@ -151,7 +152,7 @@ export const analyticsGoals = pgTable('analytics_goals', {
 
 // Content insights - AI-generated insights about content performance
 export const contentInsights = pgTable('content_insights', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().$defaultFn(() => sql`gen_random_uuid()`),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   
   // Insight details

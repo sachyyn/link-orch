@@ -1,7 +1,7 @@
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
-function Header() {
+export function AppHeader() {
   return (
     <header className="border-b border-border bg-background px-4 py-4">
       <div className="mx-auto flex max-w-7xl items-center justify-between">
@@ -33,17 +33,4 @@ function Header() {
       </div>
     </header>
   );
-}
-
-export default function OnboardingLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      {children}
-    </div>
-  )
 } 

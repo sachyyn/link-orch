@@ -1,0 +1,153 @@
+import {
+  Calendar,
+  Home,
+  BarChart3,
+  Users,
+  FileText,
+  Target,
+  Settings,
+  Plus,
+} from "lucide-react"
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
+import { UserButton } from "@clerk/nextjs"
+
+// Menu items for main navigation
+const items = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: Home,
+  },
+  {
+    title: "Content",
+    url: "/dashboard/content",
+    icon: FileText,
+  },
+  {
+    title: "Calendar",
+    url: "/dashboard/calendar",
+    icon: Calendar,
+  },
+  {
+    title: "Analytics",
+    url: "/dashboard/analytics",
+    icon: BarChart3,
+  },
+  {
+    title: "Engagement",
+    url: "/dashboard/engagement",
+    icon: Users,
+  },
+  {
+    title: "Events",
+    url: "/dashboard/events",
+    icon: Target,
+  },
+]
+
+// Quick action items
+const quickActions = [
+  {
+    title: "New Post",
+    url: "/dashboard/content/new",
+    icon: Plus,
+  },
+  {
+    title: "Schedule Event",
+    url: "/dashboard/events/new",
+    icon: Calendar,
+  },
+]
+
+export function AppSidebar() {
+  return (
+    <Sidebar>
+      <SidebarHeader className="border-b border-sidebar-border p-4">
+        <div className="flex items-center space-x-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
+            <span className="text-sm font-bold text-sidebar-primary-foreground">LM</span>
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-sidebar-foreground">LinkedinMaster Pro</h2>
+            <p className="text-xs text-sidebar-foreground/60">Professional Edition</p>
+          </div>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        {/* Main Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.url} className="flex items-center space-x-3">
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Quick Actions */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {quickActions.map((action) => (
+                <SidebarMenuItem key={action.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={action.url} className="flex items-center space-x-3">
+                      <action.icon className="h-4 w-4" />
+                      <span>{action.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <UserButton 
+              appearance={{
+                elements: {
+                  avatarBox: "h-8 w-8"
+                }
+              }}
+            />
+            <div>
+              <p className="text-sm font-medium text-sidebar-foreground">Account</p>
+              <p className="text-xs text-sidebar-foreground/60">Manage profile</p>
+            </div>
+          </div>
+          <SidebarMenuButton asChild>
+            <a href="/dashboard/settings">
+              <Settings className="h-4 w-4" />
+            </a>
+          </SidebarMenuButton>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  )
+} 

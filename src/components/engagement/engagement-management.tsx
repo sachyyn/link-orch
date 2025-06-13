@@ -1,6 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
+import { 
+  useComments, 
+  useEngagementTemplates, 
+  useEngagementMetrics 
+} from "@/hooks/use-api"
 import { CommentInbox } from "./comment-inbox"
 import { ResponseTemplates } from "./response-templates"
 import { EngagementTracking } from "./engagement-tracking"
@@ -8,52 +13,10 @@ import { EngagementFilters } from "./engagement-filters"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Search, MessageSquare, FileText, TrendingUp } from "lucide-react"
 
-interface Comment {
-  id: number
-  postId: number
-  postTitle: string
-  authorName: string
-  authorProfileUrl?: string
-  content: string
-  status: 'unread' | 'read' | 'replied' | 'ignored'
-  priority: 'low' | 'medium' | 'high'
-  sentiment: 'positive' | 'neutral' | 'negative'
-  createdAt: string
-  linkedinUrl?: string
-}
-
-interface ResponseTemplate {
-  id: number
-  title: string
-  content: string
-  category: 'appreciation' | 'question_answer' | 'follow_up' | 'networking' | 'general'
-  usage_count: number
-  createdAt: string
-}
-
-interface EngagementMetric {
-  id: number
-  postId: number
-  postTitle: string
-  comments: number
-  replies: number
-  responseRate: number
-  avgResponseTime: number // in hours
-  sentiment: {
-    positive: number
-    neutral: number
-    negative: number
-  }
-  createdAt: string
-}
-
 export function EngagementManagement() {
-  const [comments, setComments] = useState<Comment[]>([])
-  const [templates, setTemplates] = useState<ResponseTemplate[]>([])
-  const [metrics, setMetrics] = useState<EngagementMetric[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('inbox')
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
@@ -62,72 +25,49 @@ export function EngagementManagement() {
     sentiment: ''
   })
 
-  useEffect(() => {
-    fetchEngagementData()
+  // Build API parameters for comments
+  const commentsParams = useMemo(() => {
+    const params: any = {}
+    if (filters.status) params.status = filters.status
+    if (filters.priority) params.priority = filters.priority  
+    if (filters.sentiment) params.sentiment = filters.sentiment
+    if (searchQuery) params.search = searchQuery
+    return params
   }, [filters, searchQuery])
 
-  const fetchEngagementData = async () => {
-    try {
-      setLoading(true)
-      
-      // Build query parameters for comments
-      const queryParams = new URLSearchParams()
-      if (filters.status) queryParams.append('status', filters.status)
-      if (filters.priority) queryParams.append('priority', filters.priority)
-      if (filters.sentiment) queryParams.append('sentiment', filters.sentiment)
-      if (searchQuery) queryParams.append('search', searchQuery)
+  // Fetch data using React Query hooks
+  const { 
+    data: commentsData, 
+    isLoading: commentsLoading, 
+    error: commentsError,
+    refetch: refetchComments 
+  } = useComments(commentsParams)
 
-      // Fetch all data in parallel
-      const [commentsResponse, templatesResponse, metricsResponse] = await Promise.all([
-        fetch(`/api/engagement/comments?${queryParams}`),
-        fetch('/api/engagement/templates'),
-        fetch('/api/engagement/metrics')
-      ])
+  const { 
+    data: templatesData, 
+    isLoading: templatesLoading,
+    error: templatesError 
+  } = useEngagementTemplates()
 
-      const [commentsData, templatesData, metricsData] = await Promise.all([
-        commentsResponse.json(),
-        templatesResponse.json(),
-        metricsResponse.json()
-      ])
+  const { 
+    data: metricsData, 
+    isLoading: metricsLoading,
+    error: metricsError 
+  } = useEngagementMetrics()
 
-      // Handle comments response
-      if (commentsResponse.ok && commentsData.success) {
-        setComments(commentsData.data?.comments || [])
-      } else {
-        console.error('Error fetching comments:', commentsData.error)
-        setComments([])
-      }
+  // Extract data from API responses
+  const comments = commentsData?.comments || []
+  const templates = templatesData?.templates || []
+  const metrics = metricsData?.metrics || []
 
-      // Handle templates response
-      if (templatesResponse.ok && templatesData.success) {
-        setTemplates(templatesData.data?.templates || [])
-      } else {
-        console.error('Error fetching templates:', templatesData.error)
-        setTemplates([])
-      }
-
-      // Handle metrics response
-      if (metricsResponse.ok && metricsData.success) {
-        setMetrics(metricsData.data?.metrics || [])
-      } else {
-        console.error('Error fetching metrics:', metricsData.error)
-        setMetrics([])
-      }
-    } catch (error) {
-      console.error('Error fetching engagement data:', error)
-      setComments([])
-      setTemplates([])
-      setMetrics([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  const isLoading = commentsLoading || templatesLoading || metricsLoading
+  const hasError = commentsError || templatesError || metricsError
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters)
   }
 
-  const filteredComments = comments?.filter(comment => {
+  const filteredComments = comments?.filter((comment: any) => {
     if (!comment) return false
     
     const matchesSearch = searchQuery === '' || 
@@ -142,13 +82,52 @@ export function EngagementManagement() {
     return matchesSearch && matchesStatus && matchesPriority && matchesSentiment
   }) || []
 
-  if (loading) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="animate-pulse space-y-6">
+          {/* Search Bar Skeleton */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <Skeleton className="h-10 w-80" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          {/* Stats Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Tabs Skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">Failed to load engagement data</p>
+          <Button 
+            onClick={() => {
+              refetchComments()
+              window.location.reload()
+            }} 
+            variant="outline"
+          >
+            Retry
+          </Button>
         </div>
       </div>
     )
@@ -181,19 +160,19 @@ export function EngagementManagement() {
         </div>
         <div className="border rounded-lg p-4">
           <div className="text-2xl font-bold text-orange-600">
-            {filteredComments.filter(comment => comment?.status === 'unread').length}
+            {filteredComments.filter((comment: any) => comment?.status === 'unread').length}
           </div>
           <div className="text-sm text-gray-600">Unread</div>
         </div>
         <div className="border rounded-lg p-4">
           <div className="text-2xl font-bold text-green-600">
-            {filteredComments.filter(comment => comment?.status === 'replied').length}
+            {filteredComments.filter((comment: any) => comment?.status === 'replied').length}
           </div>
           <div className="text-sm text-gray-600">Replied</div>
         </div>
         <div className="border rounded-lg p-4">
           <div className="text-2xl font-bold text-blue-600">
-            {metrics.reduce((sum, metric) => sum + (metric?.responseRate || 0), 0) / Math.max(metrics.length, 1)}%
+            {Math.round(metrics.reduce((sum: number, metric: any) => sum + (metric?.responseRate || 0), 0) / Math.max(metrics.length, 1))}%
           </div>
           <div className="text-sm text-gray-600">Avg Response Rate</div>
         </div>

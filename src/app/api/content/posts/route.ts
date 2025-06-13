@@ -1,22 +1,15 @@
 import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
 import { contentFilterSchema, contentPostSchema } from '@/lib/validations'
+import { getPosts, createPost, type PostFilters, type PostListResult } from '@/db/services/content-service'
+import { type ContentPost } from '@/db/schema'
 
-// Types for our API responses
-interface PostResponse {
-  id: number
-  title: string
-  content: string
-  status: 'draft' | 'scheduled' | 'published' | 'failed' | 'archived'
+// Types for our API responses (matching database schema)
+interface PostResponse extends Omit<ContentPost, 'createdAt' | 'updatedAt' | 'scheduledAt' | 'publishedAt'> {
   scheduledAt: string | null
   publishedAt: string | null
-  pillarId: number | null
-  pillarName?: string
-  hashtags: string[]
-  mentions: string[]
-  mediaUrls: string[]
-  viewCount: number
   createdAt: string
   updatedAt: string
+  pillarName?: string
 }
 
 interface PostListResponse {
@@ -41,97 +34,30 @@ interface PostListResponse {
  * - search: Search in title and content
  * - startDate: Filter posts created after date
  * - endDate: Filter posts created before date
- * 
- * Note: This is a mock implementation demonstrating the complete API structure.
- * Real database operations will be implemented when we resolve Drizzle type conflicts.
  */
-export const GET = createGetHandler<any, PostListResponse>(
+export const GET = createGetHandler<PostFilters, PostListResponse>(
   async ({ userId, query }) => {
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      pillarId,
-      search,
-      startDate,
-      endDate
-    } = query || {}
-
-    // Mock data demonstrating complete post management functionality
-    const mockPosts: PostResponse[] = [
-      {
-        id: 1,
-        title: "Building a Strong LinkedIn Presence",
-        content: "Here's how to establish your thought leadership on LinkedIn...",
-        status: 'published',
-        scheduledAt: null,
-        publishedAt: '2024-01-15T10:00:00Z',
-        pillarId: 1,
-        pillarName: 'Thought Leadership',
-        hashtags: ['#LinkedIn', '#ThoughtLeadership', '#PersonalBranding'],
-        mentions: ['@linkedinhelp'],
-        mediaUrls: ['https://example.com/image1.jpg'],
-        viewCount: 1250,
-        createdAt: '2024-01-15T09:00:00Z',
-        updatedAt: '2024-01-15T09:00:00Z',
-      },
-      {
-        id: 2,
-        title: "Content Calendar Strategy",
-        content: "Planning your content calendar for maximum engagement...",
-        status: 'scheduled',
-        scheduledAt: '2024-01-20T14:00:00Z',
-        publishedAt: null,
-        pillarId: 2,
-        pillarName: 'Content Strategy',
-        hashtags: ['#ContentMarketing', '#Strategy'],
-        mentions: [],
-        mediaUrls: [],
-        viewCount: 0,
-        createdAt: '2024-01-14T16:30:00Z',
-        updatedAt: '2024-01-14T16:30:00Z',
-      },
-      {
-        id: 3,
-        title: "Draft: Networking Tips",
-        content: "Effective networking strategies for professionals...",
-        status: 'draft',
-        scheduledAt: null,
-        publishedAt: null,
-        pillarId: 3,
-        pillarName: 'Networking',
-        hashtags: ['#Networking', '#Professional'],
-        mentions: [],
-        mediaUrls: [],
-        viewCount: 0,
-        createdAt: '2024-01-14T11:15:00Z',
-        updatedAt: '2024-01-14T11:15:00Z',
-      }
-    ]
-
-    // Apply filters (mock implementation)
-    let filteredPosts = mockPosts.filter(post => {
-      if (status && post.status !== status) return false
-      if (pillarId && post.pillarId !== pillarId) return false
-      if (search && !post.title.toLowerCase().includes(search.toLowerCase()) && 
-          !post.content.toLowerCase().includes(search.toLowerCase())) return false
-      return true
-    })
-
-    // Apply pagination
-    const total = filteredPosts.length
-    const totalPages = Math.ceil(total / limit)
-    const offset = (page - 1) * limit
-    const paginatedPosts = filteredPosts.slice(offset, offset + limit)
+    // Use real database service
+    if (!userId) {
+      throw new Error('User ID is required')
+    }
+    const result = await getPosts(userId, query || {})
+    
+    // Transform dates to strings for JSON serialization
+    const transformedPosts = result.posts.map(post => ({
+      ...post,
+      scheduledAt: post.scheduledAt?.toISOString() || null,
+      publishedAt: post.publishedAt?.toISOString() || null,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+      hashtags: post.hashtags || [],
+      mentions: post.mentions || [],
+      mediaUrls: post.mediaUrls || [],
+    }))
 
     return {
-      posts: paginatedPosts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      posts: transformedPosts,
+      pagination: result.pagination,
     }
   },
   {
@@ -147,9 +73,6 @@ export const GET = createGetHandler<any, PostListResponse>(
  * 
  * Creates a new content post
  * Body schema: contentPostSchema
- * 
- * Note: This is a mock implementation demonstrating the complete API structure.
- * Real database operations will be implemented when we resolve Drizzle type conflicts.
  */
 export const POST = createPostHandler<any, PostResponse>(
   async ({ userId, body }) => {
@@ -172,33 +95,32 @@ export const POST = createPostHandler<any, PostResponse>(
       }
     }
 
-    // Validate pillar exists (mock validation)
-    if (pillarId && pillarId > 5) {
-      throw new Error('Content pillar not found')
-    }
-
-    // Mock post creation
-    const newPost: PostResponse = {
-      id: Math.floor(Math.random() * 10000),
+    // Create post using database service
+    const newPost = await createPost(userId, {
       title,
       content,
       status,
-      scheduledAt: scheduledAt || null,
-      publishedAt: status === 'published' ? new Date().toISOString() : null,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       pillarId: pillarId || null,
-      pillarName: pillarId ? `Pillar ${pillarId}` : undefined,
-      hashtags,
-      mentions,
-      mediaUrls,
-      viewCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
+      hashtags: hashtags || [],
+      mentions: mentions || [],
+      mediaUrls: mediaUrls || [],
+    })
 
-    return newPost
+    // Transform for response
+    return {
+      ...newPost,
+      scheduledAt: newPost.scheduledAt?.toISOString() || null,
+      publishedAt: newPost.publishedAt?.toISOString() || null,
+      createdAt: newPost.createdAt.toISOString(),
+      updatedAt: newPost.updatedAt.toISOString(),
+      hashtags: newPost.hashtags || [],
+      mentions: newPost.mentions || [],
+      mediaUrls: newPost.mediaUrls || [],
+    }
   },
   {
-    // bodySchema: contentPostSchema, // Temporarily disabled due to type conflicts
+    bodySchema: contentPostSchema,
     requireAuth: true,
     sanitizeInput: true,
     enableLogging: process.env.NODE_ENV === 'development',

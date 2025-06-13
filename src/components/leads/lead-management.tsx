@@ -1,31 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
+import { useLeads, useEvents } from "@/hooks/use-api"
 import { LeadPipeline } from "./lead-pipeline"
 import { LeadTable } from "./lead-table"
 import { LeadFilters } from "./lead-filters"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Search, LayoutGrid, List } from "lucide-react"
 
-interface Lead {
-  id: number
-  name: string
-  email: string
-  company?: string
-  jobTitle?: string
-  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost'
-  priority: 'low' | 'medium' | 'high'
-  source: string
-  estimatedValue?: number
-  lastContactedAt?: string
-  nextFollowUpAt?: string
-  createdAt: string
-}
-
 export function LeadManagement() {
-  const [leads, setLeads] = useState<Lead[]>([])
-  const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'pipeline' | 'table'>('pipeline')
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
@@ -34,44 +19,42 @@ export function LeadManagement() {
     source: ''
   })
 
-  useEffect(() => {
-    fetchLeads()
+  // Build API parameters for leads
+  const leadsParams = useMemo(() => {
+    const params: any = {}
+    if (filters.status) params.status = filters.status
+    if (filters.priority) params.priority = filters.priority
+    if (filters.source) params.source = filters.source
+    if (searchQuery) params.search = searchQuery
+    return params
   }, [filters, searchQuery])
 
-  const fetchLeads = async () => {
-    try {
-      setLoading(true)
-      
-      // Build query parameters
-      const queryParams = new URLSearchParams()
-      if (filters.status) queryParams.append('status', filters.status)
-      if (filters.priority) queryParams.append('priority', filters.priority)
-      if (filters.source) queryParams.append('source', filters.source)
-      if (searchQuery) queryParams.append('search', searchQuery)
+  // Fetch leads using React Query
+  const { 
+    data: leadsData, 
+    isLoading: leadsLoading, 
+    error: leadsError,
+    refetch: refetchLeads 
+  } = useLeads(leadsParams)
 
-      // Fetch leads from API
-      const response = await fetch(`/api/business/leads?${queryParams}`)
-      const data = await response.json()
+  // Also fetch events for lead sources/activities
+  const { 
+    data: eventsData, 
+    isLoading: eventsLoading 
+  } = useEvents()
 
-      if (response.ok && data.success) {
-        setLeads(data.data?.leads || [])
-      } else {
-        console.error('Error fetching leads:', data.error)
-        setLeads([])
-      }
-    } catch (error) {
-      console.error('Error fetching leads:', error)
-      setLeads([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Extract data from API responses
+  const leads = leadsData?.leads || []
+  const events = eventsData?.events || []
+
+  const isLoading = leadsLoading || eventsLoading
+  const hasError = leadsError
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters)
   }
 
-  const filteredLeads = leads?.filter(lead => {
+  const filteredLeads = leads?.filter((lead: any) => {
     if (!lead) return false
     
     const matchesSearch = searchQuery === '' || 
@@ -86,13 +69,49 @@ export function LeadManagement() {
     return matchesSearch && matchesStatus && matchesPriority && matchesSource
   }) || []
 
-  if (loading) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="animate-pulse space-y-6">
+          {/* Search and Filters Skeleton */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <Skeleton className="h-10 w-80" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-40" />
+            </div>
+          </div>
+          
+          {/* Stats Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Content Skeleton */}
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">Failed to load leads data</p>
+          <Button 
+            onClick={() => refetchLeads()} 
+            variant="outline"
+          >
+            Retry
+          </Button>
         </div>
       </div>
     )
@@ -148,19 +167,19 @@ export function LeadManagement() {
         </div>
         <div className="border rounded-lg p-4">
           <div className="text-2xl font-bold text-green-600">
-            {filteredLeads.filter(lead => lead?.status === 'closed_won').length}
+            {filteredLeads.filter((lead: any) => lead?.status === 'closed_won').length}
           </div>
           <div className="text-sm text-gray-600">Won</div>
         </div>
         <div className="border rounded-lg p-4">
           <div className="text-2xl font-bold text-blue-600">
-            {filteredLeads.filter(lead => lead?.status === 'qualified').length}
+            {filteredLeads.filter((lead: any) => lead?.status === 'qualified').length}
           </div>
           <div className="text-sm text-gray-600">Qualified</div>
         </div>
         <div className="border rounded-lg p-4">
           <div className="text-2xl font-bold text-purple-600">
-            ${filteredLeads.reduce((sum, lead) => sum + (lead?.estimatedValue || 0), 0).toLocaleString()}
+            ${filteredLeads.reduce((sum: number, lead: any) => sum + (lead?.estimatedValue || 0), 0).toLocaleString()}
           </div>
           <div className="text-sm text-gray-600">Pipeline Value</div>
         </div>

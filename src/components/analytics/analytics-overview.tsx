@@ -1,66 +1,41 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useAnalyticsOverview } from "@/hooks/use-api"
 import { TrendingUp, TrendingDown, Users, Eye, FileText, Heart, MessageCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 
-interface AnalyticsOverviewData {
-  summary: {
-    totalPosts: number
-    totalImpressions: number
-    totalEngagement: number
-    averageEngagementRate: number
-    followerGrowth: number
-    profileViews: number
-  }
-  trends: {
-    impressions: {
-      current: number
-      previous: number
-      changePercentage: number
-      trend: 'up' | 'down' | 'stable'
-    }
-    engagement: {
-      current: number
-      previous: number
-      changePercentage: number
-      trend: 'up' | 'down' | 'stable'
-    }
-    followers: {
-      current: number
-      previous: number
-      changePercentage: number
-      trend: 'up' | 'down' | 'stable'
-    }
-  }
+interface AnalyticsOverviewProps {
+  period?: '7d' | '30d' | '90d' | '1y'
 }
 
-export function AnalyticsOverview() {
-  const [data, setData] = useState<AnalyticsOverviewData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function AnalyticsOverview({ period = '30d' }: AnalyticsOverviewProps) {
+  const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d' | '1y'>(period)
+  
+  // Use React Query hook with real API integration
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useAnalyticsOverview({ 
+    period: selectedPeriod,
+    includeComparisons: true 
+  })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/analytics/overview')
-        if (response.ok) {
-          const result = await response.json()
-          setData(result)
-        }
-      } catch (error) {
-        console.error('Failed to fetch analytics overview:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
-
+  // Loading state with enhanced skeleton
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-lg font-medium mb-4">Performance Overview</h2>
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-6 w-48" />
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-12" />
+            ))}
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-8 py-6 border-t border-b">
           {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className="flex items-center gap-4">
@@ -77,8 +52,24 @@ export function AnalyticsOverview() {
     )
   }
 
+  // Error state with retry option
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground mb-4">Failed to load analytics data</p>
+        <Button onClick={() => refetch()} variant="outline">
+          Retry
+        </Button>
+      </div>
+    )
+  }
+
   if (!data) {
-    return null
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>No analytics data available</p>
+      </div>
+    )
   }
 
   const metrics = [
@@ -150,7 +141,22 @@ export function AnalyticsOverview() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium mb-4">Performance Overview</h2>
+      {/* Header with Period Selector */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-medium">Performance Overview</h2>
+        <div className="flex gap-2">
+          {(['7d', '30d', '90d', '1y'] as const).map((periodOption) => (
+            <Button
+              key={periodOption}
+              variant={selectedPeriod === periodOption ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedPeriod(periodOption)}
+            >
+              {periodOption}
+            </Button>
+          ))}
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-8 py-6 border-t border-b">
         {metrics.map((metric, index) => {
           const Icon = metric.icon

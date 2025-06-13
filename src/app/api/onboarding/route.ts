@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { db } from '@/db'
 import { users, userProfiles } from '@/db/schema'
 import { eq } from 'drizzle-orm'
@@ -26,11 +26,24 @@ export async function POST(request: NextRequest) {
       .limit(1)
 
     if (!existingUser) {
-      // Create user record if it doesn't exist
+      // Get the current user data from Clerk to extract email and other info
+      const clerkUser = await currentUser()
+      
+      if (!clerkUser) {
+        return NextResponse.json(
+          { error: 'Unable to fetch user data from Clerk' },
+          { status: 400 }
+        )
+      }
+
+      // Create user record with actual data from Clerk
       // This handles cases where Clerk webhook didn't create the user yet
       await db.insert(users).values({
         id: userId,
-        email: '', // We'll update this with actual email later
+        email: clerkUser.emailAddresses[0]?.emailAddress || `${userId}@temp.local`,
+        firstName: clerkUser.firstName || null,
+        lastName: clerkUser.lastName || null,
+        imageUrl: clerkUser.imageUrl || null,
         isActive: true,
       })
     }

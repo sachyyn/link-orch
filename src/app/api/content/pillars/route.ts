@@ -1,14 +1,9 @@
 import { createGetHandler, createPostHandler } from '@/lib/api-wrapper'
+import { getPillars, createPillar } from '@/db/services/content-service'
+import { type ContentPillar } from '@/db/schema'
 
 // Types for content pillars
-interface PillarResponse {
-  id: number
-  name: string
-  description: string
-  color: string
-  targetPercentage: number
-  postCount: number
-  lastPostDate: string | null
+interface PillarResponse extends Omit<ContentPillar, 'createdAt' | 'updatedAt'> {
   createdAt: string
   updatedAt: string
 }
@@ -38,68 +33,34 @@ interface CreatePillarRequest {
  */
 export const GET = createGetHandler<never, PillarListResponse>(
   async ({ userId }) => {
-    // Mock pillars data demonstrating comprehensive pillar management
-    const mockPillars: PillarResponse[] = [
-      {
-        id: 1,
-        name: 'Thought Leadership',
-        description: 'Industry insights and strategic thinking',
-        color: '#3B82F6', // Blue
-        targetPercentage: 40,
-        postCount: 45,
-        lastPostDate: '2024-01-15T10:00:00Z',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-      },
-      {
-        id: 2,
-        name: 'Company Culture',
-        description: 'Behind-the-scenes and team highlights',
-        color: '#10B981', // Green
-        targetPercentage: 25,
-        postCount: 28,
-        lastPostDate: '2024-01-14T15:30:00Z',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-      },
-      {
-        id: 3,
-        name: 'Educational Content',
-        description: 'Tips, tutorials, and how-to guides',
-        color: '#F59E0B', // Amber
-        targetPercentage: 20,
-        postCount: 32,
-        lastPostDate: '2024-01-13T09:00:00Z',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-      },
-      {
-        id: 4,
-        name: 'Personal Stories',
-        description: 'Personal experiences and lessons learned',
-        color: '#8B5CF6', // Purple
-        targetPercentage: 15,
-        postCount: 18,
-        lastPostDate: '2024-01-12T14:20:00Z',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-      }
-    ]
+    if (!userId) throw new Error('Authentication required')
+    
+    // Get pillars from database
+    const dbPillars = await getPillars(userId)
+    
+    // Transform for response
+    const pillars: PillarResponse[] = dbPillars.map(pillar => ({
+      ...pillar,
+      createdAt: pillar.createdAt.toISOString(),
+      updatedAt: pillar.updatedAt.toISOString(),
+    }))
 
-    const totalPosts = mockPillars.reduce((sum, pillar) => sum + pillar.postCount, 0)
+    const totalPosts = pillars.reduce((sum, pillar) => sum + (pillar.postCount || 0), 0)
     
     // Calculate analytics
-    const topPerformingPillar = mockPillars.reduce((top, current) => 
-      current.postCount > top.postCount ? current : top
-    )
+    const topPerformingPillar = pillars.length > 0 
+      ? pillars.reduce((top, current) => 
+          (current.postCount || 0) > (top.postCount || 0) ? current : top
+        )
+      : null
 
     return {
-      pillars: mockPillars,
+      pillars,
       totalPosts,
       analytics: {
-        mostActiveMonth: 'January 2024',
-        topPerformingPillar: topPerformingPillar.name,
-        averagePostsPerPillar: Math.round(totalPosts / mockPillars.length),
+        mostActiveMonth: 'January 2024', // TODO: Calculate from actual data
+        topPerformingPillar: topPerformingPillar?.name || 'None',
+        averagePostsPerPillar: pillars.length > 0 ? Math.round(totalPosts / pillars.length) : 0,
       },
     }
   },

@@ -8,6 +8,9 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
+import { QueryProvider } from '@/components/providers/query-provider'
 import "./globals.css";
 
 const inter = Inter({
@@ -65,9 +68,19 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={`${inter.variable} font-sans antialiased`}>
-          {children}
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </QueryProvider>
         </body>
       </html>
     </ClerkProvider>

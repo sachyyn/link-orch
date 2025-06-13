@@ -8,30 +8,10 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns"
 
 interface ContentCalendarProps {
+  posts: any[]
   searchQuery: string
+  pillars: any[]
 }
-
-// Mock posts data
-const mockPosts = [
-  {
-    id: 1,
-    title: "Building a Strong LinkedIn Presence",
-    status: 'published' as const,
-    scheduledAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: 2,
-    title: "Content Calendar Strategy", 
-    status: 'scheduled' as const,
-    scheduledAt: '2024-01-20T14:00:00Z',
-  },
-  {
-    id: 3,
-    title: "Networking Tips",
-    status: 'draft' as const,
-    scheduledAt: '2024-01-25T09:00:00Z',
-  },
-]
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -41,7 +21,7 @@ const statusColors = {
   archived: 'bg-yellow-100 text-yellow-800',
 }
 
-export function ContentCalendar({ searchQuery }: ContentCalendarProps) {
+export function ContentCalendar({ posts, searchQuery, pillars }: ContentCalendarProps) {
   const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
 
@@ -50,7 +30,8 @@ export function ContentCalendar({ searchQuery }: ContentCalendarProps) {
   const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
   const getPostsForDay = (day: Date) => {
-    return mockPosts.filter(post => {
+    if (!Array.isArray(posts)) return []
+    return posts.filter((post: any) => {
       if (!post.scheduledAt) return false
       return isSameDay(new Date(post.scheduledAt), day)
     })
@@ -181,7 +162,7 @@ export function ContentCalendar({ searchQuery }: ContentCalendarProps) {
                     >
                       <Badge 
                         variant="outline"
-                        className={`${statusColors[post.status]} text-xs h-5 truncate max-w-full`}
+                        className={`${statusColors[post.status as keyof typeof statusColors]} text-xs h-5 truncate max-w-full`}
                       >
                         {post.title.length > 20 ? `${post.title.substring(0, 20)}...` : post.title}
                       </Badge>
@@ -197,21 +178,21 @@ export function ContentCalendar({ searchQuery }: ContentCalendarProps) {
       {/* Calendar Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div>
-          Total posts this month: {mockPosts.filter(post => {
+          Total posts this month: {Array.isArray(posts) ? posts.filter((post: any) => {
             if (!post.scheduledAt) return false
             const postDate = new Date(post.scheduledAt)
             return isSameMonth(postDate, currentDate)
-          }).length}
+          }).length : 0}
         </div>
         <div className="flex items-center gap-4">
           <span>
-            Scheduled: {mockPosts.filter(p => p.status === 'scheduled').length}
+            Scheduled: {Array.isArray(posts) ? posts.filter((p: any) => p.status === 'scheduled').length : 0}
           </span>
           <span>
-            Published: {mockPosts.filter(p => p.status === 'published').length}
+            Published: {Array.isArray(posts) ? posts.filter((p: any) => p.status === 'published').length : 0}
           </span>
           <span>
-            Drafts: {mockPosts.filter(p => p.status === 'draft').length}
+            Drafts: {Array.isArray(posts) ? posts.filter((p: any) => p.status === 'draft').length : 0}
           </span>
         </div>
       </div>

@@ -50,51 +50,10 @@ interface Post {
 }
 
 interface ContentTableProps {
+  posts: Post[]
   searchQuery: string
+  pillars: any[]
 }
-
-// Mock data - replace with API call
-const mockPosts: Post[] = [
-  {
-    id: 1,
-    title: "Building a Strong LinkedIn Presence",
-    content: "Here's how to establish your thought leadership on LinkedIn...",
-    status: 'published',
-    scheduledAt: null,
-    publishedAt: '2024-01-15T10:00:00Z',
-    pillarName: 'Thought Leadership',
-    hashtags: ['#LinkedIn', '#ThoughtLeadership'],
-    viewCount: 1250,
-    createdAt: '2024-01-15T09:00:00Z',
-    updatedAt: '2024-01-15T09:00:00Z',
-  },
-  {
-    id: 2,
-    title: "Content Calendar Strategy",
-    content: "Planning your content calendar for maximum engagement...",
-    status: 'scheduled',
-    scheduledAt: '2024-01-20T14:00:00Z',
-    publishedAt: null,
-    pillarName: 'Content Strategy',
-    hashtags: ['#ContentMarketing', '#Strategy'],
-    viewCount: 0,
-    createdAt: '2024-01-14T16:30:00Z',
-    updatedAt: '2024-01-14T16:30:00Z',
-  },
-  {
-    id: 3,
-    title: "Draft: Networking Tips",
-    content: "Effective networking strategies for professionals...",
-    status: 'draft',
-    scheduledAt: null,
-    publishedAt: null,
-    pillarName: 'Networking',
-    hashtags: ['#Networking', '#Professional'],
-    viewCount: 0,
-    createdAt: '2024-01-14T11:15:00Z',
-    updatedAt: '2024-01-14T11:15:00Z',
-  },
-]
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800 border-gray-200',
@@ -104,11 +63,16 @@ const statusColors = {
   archived: 'bg-yellow-100 text-yellow-800 border-yellow-200',
 }
 
-export function ContentTable({ searchQuery }: ContentTableProps) {
+export function ContentTable({ posts, searchQuery, pillars }: ContentTableProps) {
   const router = useRouter()
-  const [data, setData] = useState<Post[]>(mockPosts)
+  const [data, setData] = useState<Post[]>(posts)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+
+  // Update data when posts prop changes
+  useEffect(() => {
+    setData(posts)
+  }, [posts])
 
   const handleEdit = (postId: number) => {
     router.push(`/dashboard/content/${postId}/edit`)

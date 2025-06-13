@@ -30,9 +30,9 @@ export const contentPillarSchema = z.object({
 export const updateContentPillarSchema = contentPillarSchema.partial()
 
 export const contentPostSchema = z.object({
-  title: z.string().min(1).max(500),
+  title: z.string().min(1).max(500).optional(),
   content: z.string().min(1),
-  status: z.enum(['draft', 'scheduled', 'published', 'archived']).default('draft'),
+  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']).default('draft'),
   scheduledAt: z.string().datetime().optional(),
   pillarId: z.number().optional(),
   hashtags: z.array(z.string()).max(30).optional(),
@@ -146,7 +146,7 @@ export const dateRangeSchema = z.object({
 })
 
 export const contentFilterSchema = z.object({
-  status: z.enum(['draft', 'scheduled', 'published', 'archived']).optional(),
+  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']).optional(),
   pillarId: z.coerce.number().optional(),
   search: z.string().max(100).optional(),
 }).merge(paginationSchema).merge(dateRangeSchema)

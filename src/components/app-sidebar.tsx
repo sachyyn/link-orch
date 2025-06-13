@@ -8,6 +8,7 @@ import {
   Settings,
   Plus,
 } from "lucide-react"
+import Link from "next/link"
 
 import {
   Sidebar,
@@ -46,14 +47,19 @@ const items = [
     icon: BarChart3,
   },
   {
-    title: "Engagement",
-    url: "/dashboard/engagement",
+    title: "Leads",
+    url: "/dashboard/leads",
     icon: Users,
   },
   {
     title: "Events",
     url: "/dashboard/events",
     icon: Target,
+  },
+  {
+    title: "Settings",
+    url: "/dashboard/settings",
+    icon: Settings,
   },
 ]
 
@@ -65,7 +71,7 @@ const quickActions = [
     icon: Plus,
   },
   {
-    title: "Schedule Event",
+    title: "Create Event",
     url: "/dashboard/events/new",
     icon: Calendar,
   },
@@ -95,10 +101,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center space-x-3">
+                    <Link href={item.url} className="flex items-center space-x-3">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -114,10 +120,10 @@ export function AppSidebar() {
               {quickActions.map((action) => (
                 <SidebarMenuItem key={action.title}>
                   <SidebarMenuButton asChild>
-                    <a href={action.url} className="flex items-center space-x-3">
+                    <Link href={action.url} className="flex items-center space-x-3">
                       <action.icon className="h-4 w-4" />
                       <span>{action.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -136,16 +142,11 @@ export function AppSidebar() {
                 }
               }}
             />
-            <div>
-              <p className="text-sm font-medium text-sidebar-foreground">Account</p>
+            <div className="text-sm">
+              <p className="font-medium text-sidebar-foreground">Your Account</p>
               <p className="text-xs text-sidebar-foreground/60">Manage profile</p>
             </div>
           </div>
-          <SidebarMenuButton asChild>
-            <a href="/dashboard/settings">
-              <Settings className="h-4 w-4" />
-            </a>
-          </SidebarMenuButton>
         </div>
       </SidebarFooter>
     </Sidebar>

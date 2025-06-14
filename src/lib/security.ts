@@ -32,7 +32,7 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
 
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
-  'https://linkedinmaster-pro.vercel.app',
+  'https://link-pro.vercel.app',
   // Add your production domains here
 ]
 

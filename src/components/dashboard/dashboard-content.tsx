@@ -259,7 +259,7 @@ export function DashboardContent() {
           <div className="relative">
             <div className="absolute -left-8 w-3 h-3 bg-primary rounded-full border-2 border-background"></div>
             <div>
-              <h3 className="font-medium">Welcome to LinkedinMaster Pro!</h3>
+              <h3 className="font-medium">Welcome to Link Pro!</h3>
               <p className="text-sm text-muted-foreground">Account created successfully</p>
               <p className="text-xs text-muted-foreground mt-1">Just now</p>
             </div>

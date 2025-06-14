@@ -1,8 +1,8 @@
-# LinkedInMaster Pro 🚀
+# Link Pro 🚀
 
 **AI-Powered LinkedIn Content Creation & Management Platform**
 
-LinkedInMaster Pro is a comprehensive Next.js application that revolutionizes LinkedIn content strategy through advanced AI-powered content generation, analytics, and engagement management. Create compelling LinkedIn posts, articles, and carousels with intelligent AI assistance while tracking performance and managing your professional network.
+Link Pro is a comprehensive Next.js application that revolutionizes LinkedIn content strategy through advanced AI-powered content generation, analytics, and engagement management. Create compelling LinkedIn posts, articles, and carousels with intelligent AI assistance while tracking performance and managing your professional network.
 
 ## ✨ Key Features
 
@@ -47,7 +47,7 @@ LinkedInMaster Pro is a comprehensive Next.js application that revolutionizes Li
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd linkedinmaster-pro
+   cd link-pro
    ```
 
 2. **Install dependencies**

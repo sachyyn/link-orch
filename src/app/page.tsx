@@ -10,7 +10,7 @@ function Header() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="text-sm font-bold text-primary-foreground">LM</span>
           </div>
-          <h1 className="text-xl font-semibold">LinkedinMaster Pro</h1>
+          <h1 className="text-xl font-semibold">Link Pro</h1>
         </div>
         <div className="flex items-center space-x-4">
           <SignedOut>
@@ -44,7 +44,7 @@ export default function Home() {
         <div className="text-center max-w-2xl mx-auto">
           <SignedOut>
             <h1 className="text-4xl font-bold mb-6">
-              Welcome to LinkedinMaster Pro
+              Welcome to Link Pro
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
               The complete LinkedIn management platform for content creators, thought leaders, and social media professionals.

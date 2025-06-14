@@ -98,7 +98,7 @@ export function AppSidebar() {
             <span className="text-sm font-bold text-sidebar-primary-foreground">LM</span>
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-sidebar-foreground">LinkedinMaster Pro</h2>
+            <h2 className="text-sm font-semibold text-sidebar-foreground">Link Pro</h2>
             <p className="text-xs text-sidebar-foreground/60">Professional Edition</p>
           </div>
         </div>

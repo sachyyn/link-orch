@@ -62,7 +62,7 @@ export default function OnboardingPage() {
               <span className="text-lg font-bold text-white">LM</span>
             </div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              Welcome to LinkedinMaster Pro
+              Welcome to Link Pro
             </h1>
             <p className="text-gray-600">
               Let&apos;s set up your profile to get started

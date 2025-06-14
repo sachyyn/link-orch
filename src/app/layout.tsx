@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LinkedinMaster Pro",
+  title: "Link Pro",
   description: "All-in-one LinkedIn management platform for content creators and thought leaders",
 };
 

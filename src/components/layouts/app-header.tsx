@@ -9,7 +9,7 @@ export function AppHeader() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="text-sm font-bold text-primary-foreground">LM</span>
           </div>
-          <h1 className="text-xl font-semibold">LinkedinMaster Pro</h1>
+          <h1 className="text-xl font-semibold">Link Pro</h1>
         </div>
         <div className="flex items-center space-x-4">
           <SignedOut>

@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { 
   useSession, 
   useProject, 
   useContentVersions,
   useAssets,
-  useGenerateContent,
+  useStreamingContentGeneration,
   useGenerateAssets,
   useSelectVersion
 } from "@/hooks/use-ai-creator"
@@ -54,7 +54,7 @@ const generateContentSchema = z.object({
   tone: z.enum(["professional", "casual", "thought-leader", "provocative", "educational", "inspirational", "conversational", "custom"]).optional(),
   contentType: z.enum(["post", "article", "poll", "carousel"]).optional(),
   guidelines: z.string().optional(),
-  variations: z.number().min(1).max(5),
+  variations: z.number().min(1).max(6),
 })
 
 // Asset generation form schema
@@ -308,7 +308,7 @@ export default function SessionDetailPage() {
   } = useAssets(sessionId)
   
   // Mutations
-  const generateContentMutation = useGenerateContent()
+  const streamingContentGeneration = useStreamingContentGeneration()
   const generateAssetMutation = useGenerateAssets()
   const selectVersionMutation = useSelectVersion()
 
@@ -333,6 +333,20 @@ export default function SessionDetailPage() {
   const versions = versionsData?.versions || []
   const assets = assetsData?.assets || []
   const selectedVersion = versions.find((v: { isSelected?: boolean }) => v.isSelected)
+
+  // Effect to show success toast when generation completes
+  useEffect(() => {
+    if (streamingContentGeneration.isComplete && streamingContentGeneration.variations.length > 0) {
+      toast.success(`Successfully generated ${streamingContentGeneration.variations.length} content variations!`)
+    }
+  }, [streamingContentGeneration.isComplete, streamingContentGeneration.variations.length])
+
+  // Effect to show errors
+  useEffect(() => {
+    if (streamingContentGeneration.error) {
+      toast.error(streamingContentGeneration.error)
+    }
+  }, [streamingContentGeneration.error])
 
   // Version selection handler
   const onSelectVersion = async (versionId: string) => {
@@ -367,7 +381,7 @@ export default function SessionDetailPage() {
   // Content generation handler
   const onGenerateContent = async (data: GenerateContentForm) => {
     try {
-      await generateContentMutation.mutateAsync({
+      await streamingContentGeneration.generateContent({
         sessionId: sessionId,
         postIdea: session?.postIdea || "",
         tone: data.tone || project?.tone,
@@ -375,8 +389,7 @@ export default function SessionDetailPage() {
         guidelines: data.guidelines || project?.guidelines,
         variations: data.variations,
       })
-      toast.success("Content generated successfully!")
-      refetchVersions()
+      // Note: No manual refetch needed as the streaming hook handles invalidation
     } catch (_error) {
       console.error("Failed to generate content:", _error)
       toast.error("Failed to generate content. Please try again.")
@@ -633,7 +646,7 @@ export default function SessionDetailPage() {
                         <SelectContent>
                           <SelectItem value="professional">Professional</SelectItem>
                           <SelectItem value="casual">Casual</SelectItem>
-                          <SelectItem value="thought-leader">Thought Leader</SelectItem>
+                          <SelectItem value="thought_leadership">Thought Leader</SelectItem>
                           <SelectItem value="provocative">Provocative</SelectItem>
                           <SelectItem value="educational">Educational</SelectItem>
                           <SelectItem value="inspirational">Inspirational</SelectItem>
@@ -657,6 +670,7 @@ export default function SessionDetailPage() {
                           <SelectItem value="3">3 variations</SelectItem>
                           <SelectItem value="4">4 variations</SelectItem>
                           <SelectItem value="5">5 variations</SelectItem>
+                          <SelectItem value="6">6 variations</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -673,14 +687,17 @@ export default function SessionDetailPage() {
 
                   <Button 
                     type="submit" 
-                    disabled={generateContentMutation.isPending}
+                    disabled={streamingContentGeneration.isStreaming}
                     size="lg"
                     className="w-full md:w-auto shadow-lg"
                   >
-                    {generateContentMutation.isPending ? (
+                    {streamingContentGeneration.isStreaming ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Generating...
+                        {streamingContentGeneration.progress > 0 
+                          ? `Generating... ${streamingContentGeneration.progressPercentage}%`
+                          : 'Starting generation...'
+                        }
                       </>
                     ) : (
                       <>
@@ -692,6 +709,108 @@ export default function SessionDetailPage() {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Real-time Generation Progress */}
+            {streamingContentGeneration.isStreaming && (
+              <Card className="border-blue-200 bg-blue-50/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-blue-900">Generating Content Variations</h3>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        {streamingContentGeneration.progress}/{streamingContentGeneration.total}
+                      </Badge>
+                    </div>
+                    
+                    <div className="w-full bg-blue-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${streamingContentGeneration.progressPercentage}%` }}
+                      />
+                    </div>
+                    
+                    {streamingContentGeneration.currentApproaches.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-blue-700 font-medium">Content Approaches:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {streamingContentGeneration.currentApproaches.map((approach) => (
+                            <Badge key={approach} variant="outline" className="text-xs capitalize border-blue-300 text-blue-800">
+                              {approach.replace('-', ' ')}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {streamingContentGeneration.totalTokensUsed > 0 && (
+                      <p className="text-xs text-blue-600">
+                        Tokens used: {streamingContentGeneration.totalTokensUsed.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Generated Variations Progress */}
+            {streamingContentGeneration.variations.length > 0 && streamingContentGeneration.isStreaming && (
+              <Card className="border-green-200 bg-green-50/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-green-900">Completed Variations</h3>
+                    <div className="space-y-3">
+                      {streamingContentGeneration.variations.map((variation, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-green-200">
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-xs capitalize border-green-300 text-green-800">
+                                {variation.approach?.replace('-', ' ')}
+                              </Badge>
+                              <span className="text-xs text-green-600">
+                                {variation.contentLength} chars
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 line-clamp-2">
+                              {variation.content}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Error Display */}
+            {streamingContentGeneration.error && (
+              <Card className="border-red-200 bg-red-50/50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <div className="h-5 w-5 text-red-500 mt-0.5">
+                      <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-red-900 mb-1">Generation Error</h3>
+                      <p className="text-sm text-red-700">{streamingContentGeneration.error}</p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+                        onClick={streamingContentGeneration.reset}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Generated Versions */}
             <div className="space-y-6">

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, useCallback } from 'react'
 import { apiClient } from '@/lib/api-client'
 
 // ================================
@@ -20,6 +21,34 @@ interface GenerateAssetParams {
   prompt: string
   style?: string
   dimensions?: string
+}
+
+// Streaming content generation types
+interface StreamingState {
+  isStreaming: boolean
+  progress: number
+  total: number
+  variations: any[]
+  currentApproaches: string[]
+  error: string | null
+  isComplete: boolean
+  totalTokensUsed: number
+}
+
+interface StreamEventData {
+  type: 'started' | 'variation_complete' | 'variation_error' | 'complete' | 'error'
+  total?: number
+  approaches?: string[]
+  variation?: any
+  progress?: number
+  tokensUsed?: number
+  variations?: any[]
+  totalTokensUsed?: number
+  error?: string
+  metadata?: any
+  // For variation_error events
+  index?: number
+  approach?: string
 }
 
 // ================================
@@ -164,6 +193,154 @@ export function useUpdateSession() {
 // Content Generation Hooks
 // ================================
 
+export function useStreamingContentGeneration() {
+  const queryClient = useQueryClient()
+  const [state, setState] = useState<StreamingState>({
+    isStreaming: false,
+    progress: 0,
+    total: 0,
+    variations: [],
+    currentApproaches: [],
+    error: null,
+    isComplete: false,
+    totalTokensUsed: 0,
+  })
+
+  const generateContent = useCallback(async (params: GenerateContentParams) => {
+    setState({
+      isStreaming: true,
+      progress: 0,
+      total: params.variations,
+      variations: [],
+      currentApproaches: [],
+      error: null,
+      isComplete: false,
+      totalTokensUsed: 0,
+    })
+
+    try {
+      const response = await fetch('/api/ai-creator/generate/content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (!reader) {
+        throw new Error('No response body reader available')
+      }
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const eventData: StreamEventData = JSON.parse(line.slice(6))
+              
+              setState(prevState => {
+                switch (eventData.type) {
+                  case 'started':
+                    return {
+                      ...prevState,
+                      total: eventData.total || prevState.total,
+                      currentApproaches: eventData.approaches || [],
+                    }
+                  
+                  case 'variation_complete':
+                    return {
+                      ...prevState,
+                      progress: eventData.progress || prevState.progress,
+                      variations: eventData.variation 
+                        ? [...prevState.variations, eventData.variation]
+                        : prevState.variations,
+                      totalTokensUsed: prevState.totalTokensUsed + (eventData.tokensUsed || 0),
+                    }
+                  
+                  case 'variation_error':
+                    console.error(`Variation ${eventData.index} (${eventData.approach}) failed:`, eventData.error)
+                    return prevState // Continue with other variations
+                  
+                  case 'complete':
+                    // Invalidate queries on completion
+                    queryClient.invalidateQueries({ 
+                      queryKey: aiCreatorQueryKeys.versions.bySession(params.sessionId) 
+                    })
+                    queryClient.invalidateQueries({ 
+                      queryKey: aiCreatorQueryKeys.sessions.detail(params.sessionId) 
+                    })
+                    queryClient.invalidateQueries({ 
+                      queryKey: aiCreatorQueryKeys.usage.all() 
+                    })
+                    
+                    return {
+                      ...prevState,
+                      isComplete: true,
+                      isStreaming: false,
+                      variations: eventData.variations || prevState.variations,
+                      totalTokensUsed: eventData.totalTokensUsed || prevState.totalTokensUsed,
+                    }
+                  
+                  case 'error':
+                    return {
+                      ...prevState,
+                      error: eventData.error || 'Unknown error occurred',
+                      isStreaming: false,
+                    }
+                  
+                  default:
+                    return prevState
+                }
+              })
+            } catch (parseError) {
+              console.error('Failed to parse SSE data:', parseError)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      setState(prevState => ({
+        ...prevState,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        isStreaming: false,
+      }))
+    }
+  }, [queryClient])
+
+  const reset = useCallback(() => {
+    setState({
+      isStreaming: false,
+      progress: 0,
+      total: 0,
+      variations: [],
+      currentApproaches: [],
+      error: null,
+      isComplete: false,
+      totalTokensUsed: 0,
+    })
+  }, [])
+
+  return {
+    ...state,
+    generateContent,
+    reset,
+    progressPercentage: state.total > 0 ? Math.round((state.progress / state.total) * 100) : 0,
+  }
+}
+
+// Legacy hook for backwards compatibility (falls back to regular mutation)
 export function useGenerateContent() {
   const queryClient = useQueryClient()
   

@@ -53,7 +53,7 @@ export const createProjectSchema = z.object({
   
   guidelines: z.string()
     .min(1, "Guidelines are required")
-    .max(2000, "Guidelines must be less than 2000 characters"),
+    .max(10000, "Guidelines must be less than 10,000 characters"),
   
   // Optional advanced fields
   targetAudience: z.string().optional(),
@@ -88,7 +88,7 @@ export const createProjectApiSchema = z.object({
   
   guidelines: z.string()
     .min(1, "Guidelines are required")
-    .max(2000, "Guidelines must be less than 2000 characters"),
+    .max(10000, "Guidelines must be less than 10,000 characters"),
   
   // Optional advanced fields
   targetAudience: z.string().optional(),
@@ -113,7 +113,8 @@ export const createProjectFormSchema = z.object({
   contentType: z.enum(FRONTEND_CONTENT_TYPES),
   
   guidelines: z.string()
-    .min(1, "Please provide some basic guidelines for your content"),
+    .min(1, "Please provide some basic guidelines for your content")
+    .max(10000, "Guidelines must be less than 10,000 characters"),
 })
 
 // Type exports

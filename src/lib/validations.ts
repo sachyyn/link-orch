@@ -9,7 +9,7 @@ export const userProfileSchema = z.object({
   company: z.string().min(1).max(200).optional(),
   linkedinUrl: z.string().url().optional(),
   bio: z.string().max(500).optional(),
-  primaryGoal: z.enum(['brand_building', 'lead_generation', 'networking', 'thought_leadership']).optional(),
+  primaryGoal: z.enum(['professional', 'casual', 'thought_leadership', 'provocative', 'educational', 'inspirational', 'conversational']).optional(),
   targetAudience: z.string().max(300).optional(),
   contentFrequency: z.enum(['daily', 'weekly', 'bi_weekly', 'monthly']).optional(),
 })

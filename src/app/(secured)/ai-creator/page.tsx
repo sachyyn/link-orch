@@ -155,8 +155,8 @@ export default function AICreatorPage() {
                   Create Project
                 </Button>
               </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
+            <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
                   Create New AI Project
@@ -166,7 +166,8 @@ export default function AICreatorPage() {
                 </DialogDescription>
               </DialogHeader>
               
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div className="flex-1 overflow-y-auto pr-1">
+                <form id="create-project-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium">Project Name</Label>
                   <Input
@@ -245,24 +246,26 @@ export default function AICreatorPage() {
                     <p className="text-sm text-destructive">{errors.guidelines.message}</p>
                   )}
                 </div>
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setCreateDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createProjectMutation.isPending}
-                    className="min-w-[120px]"
-                  >
-                    {createProjectMutation.isPending ? "Creating..." : "Create Project"}
-                  </Button>
-                </div>
-              </form>
+                </form>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-border/50 flex-shrink-0">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setCreateDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  form="create-project-form"
+                  disabled={createProjectMutation.isPending}
+                  className="min-w-[120px]"
+                >
+                  {createProjectMutation.isPending ? "Creating..." : "Create Project"}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
           </div>

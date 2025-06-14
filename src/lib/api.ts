@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { ZodSchema, ZodError } from 'zod'
-import { apiResponseSchema, paginatedResponseSchema } from './validations'
 
 // ================================
 // Error Types and Classes

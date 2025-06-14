@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     // Generate content using Gemini 2.0 Pro
     const result = await generateText({
-      model: google('gemini-2.0-flash-exp'), // Using latest Gemini model
+      model: google('gemini-2.5-flash-preview-05-20'), // Using latest Gemini model
       system: systemPrompt,
       prompt: userPrompt,
       temperature: 0.7, // Balance creativity and consistency
